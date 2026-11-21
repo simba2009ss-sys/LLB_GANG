@@ -1,0 +1,2037 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Проект</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0811; --ink:#eee9f8; --mut:#9a93ae; --line:rgba(255,255,255,.1);
+  --acc:#b9a8ff; --acc-rgb:185,168,255;
+  --display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --ease:cubic-bezier(.2,.7,.2,1);
+  --hdr:64px;
+}
+*{box-sizing:border-box;margin:0}
+html{background:var(--bg)}
+body{background:transparent;color:var(--ink);font:400 16px/1.55 var(--body);min-height:100svh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none;-webkit-user-drag:none}
+img{display:block;max-width:100%;-webkit-user-drag:none}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* зерно поверх всего */
+body::after{content:"";position:fixed;inset:0;z-index:60;pointer-events:none;opacity:.07;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+
+/* фон страницы: размытая обложка */
+#amb{position:fixed;inset:-10%;z-index:-1;background-size:cover;background-position:center;transform:scale(1.15);
+  filter:blur(80px) saturate(1.5);opacity:.26;transition:opacity .6s}
+#amb:not(.img){opacity:1;filter:none;transform:none;inset:0;
+  background:
+   radial-gradient(60vmax 40vmax at 8% 0%,rgba(157,123,255,.22),transparent 60%),
+   radial-gradient(50vmax 40vmax at 100% 30%,rgba(255,138,61,.14),transparent 60%),
+   radial-gradient(50vmax 40vmax at 40% 100%,rgba(53,214,192,.12),transparent 60%)}
+
+/* шапка */
+#hdr{position:sticky;top:0;z-index:30;height:var(--hdr);display:flex;align-items:center;gap:14px;padding:0 24px;
+  background:rgba(10,8,17,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line);view-transition-name:hdr}
+.back{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;transition:.25s var(--ease)}
+.back:hover{border-color:var(--acc);color:var(--acc);transform:translateX(-3px)}
+.back[hidden]{display:none}
+.brand{font:800 15px/1 var(--display);letter-spacing:.02em}
+.nav{margin-left:auto;display:flex;gap:6px}
+.nav a{padding:8px 14px;border-radius:99px;color:var(--mut);font-size:14px;font-weight:500;transition:.25s}
+.nav a:hover{color:var(--ink);background:rgba(255,255,255,.07)}
+.nav a.on{color:#0a0811;background:var(--acc)}
+@media(max-width:620px){#hdr{padding:0 14px}.nav a{padding:8px 10px;font-size:13px}.brand{display:none}}
+
+main{max-width:1240px;margin:0 auto;padding:0 24px 80px;min-height:70svh}
+body.has-dock main{padding-bottom:130px}
+@media(max-width:620px){main{padding:0 16px 80px}}
+h1,h2{font-family:var(--display);font-weight:800;line-height:1.05;letter-spacing:-.02em}
+.mut{color:var(--mut)}
+.who a{color:var(--acc)} .who a:hover{text-decoration:underline;text-underline-offset:3px}
+.prod{color:var(--mut)} .prod a{color:var(--ink)} .prod a:hover{color:var(--acc)}
+.chip{display:inline-block;padding:3px 12px;border:1px solid rgba(var(--acc-rgb),.5);color:var(--acc);border-radius:99px;font-size:13px;font-weight:500}
+
+/* обложки */
+.cover{position:relative;aspect-ratio:1;border-radius:14px;overflow:hidden;display:flex;align-items:flex-end;padding:12px;
+  font:800 18px/1.1 var(--display);box-shadow:0 18px 40px -18px rgba(0,0,0,.7)}
+.cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tilt{transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .35s var(--ease),box-shadow .35s;will-change:transform}
+.tilt::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .3s;
+  background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.22),transparent 55%)}
+.tilt:hover::after{opacity:1}
+.tilt:hover{box-shadow:0 30px 60px -20px rgba(var(--acc-rgb),.35)}
+
+/* ===== главная: панели артистов ===== */
+.stage{padding-top:24px}
+.panels{display:flex;gap:10px;height:clamp(460px,76svh,780px)}
+.panel{position:relative;flex:1;border-radius:22px;overflow:hidden;display:flex;align-items:flex-end;isolation:isolate;
+  background:linear-gradient(160deg,rgba(var(--a-rgb),.35),#0d0a16 70%);transition:flex .7s var(--ease)}
+.panel::before{content:"";position:absolute;inset:0;z-index:-2;background:var(--photo) center/cover;
+  filter:grayscale(1) contrast(1.15) brightness(.62);transform:scale(1.06);transition:filter .6s,transform .9s var(--ease)}
+.panel::after{content:"";position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(0deg,rgba(8,6,14,.92) 0%,rgba(8,6,14,.35) 45%,transparent 75%)}
+@media(hover:hover){
+  .panels:hover .panel{flex:.78}
+  .panels .panel:hover{flex:1.7}
+  .panel:hover::before{filter:none;transform:scale(1)}
+}
+.panel-in{padding:clamp(18px,2.4vw,34px);width:100%}
+.panel .role{font-size:14px;color:rgba(255,255,255,.75)}
+.name-line{display:block;overflow:hidden;padding:.06em 0 .1em}
+.panel .name{display:block;font:800 clamp(1.8rem,3.5vw,3.6rem)/1 var(--display);letter-spacing:-.03em;transition:color .3s}
+.panel:hover .name{color:var(--a)}
+.panel .tag{margin-top:8px;max-width:30ch;color:rgba(255,255,255,.78);font-size:15px}
+.panel .count{margin-top:14px;display:inline-flex;gap:8px;align-items:center;font-size:14px;font-weight:500;color:var(--a)}
+.panel .count i{display:inline-block;width:26px;height:1px;background:currentColor;transition:width .5s var(--ease)}
+.panel:hover .count i{width:60px}
+@media(max-width:760px){
+  .panels{flex-direction:column;height:auto}
+  .panel{flex:none;min-height:38svh}
+  .panel::before{filter:grayscale(.6) brightness(.7)}
+}
+
+/* ===== дорожка релизов (таймлайн) ===== */
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:72px 0 22px}
+.sec-head h2{font-size:clamp(1.5rem,3vw,2.2rem)}
+.ctl{display:flex;gap:8px}
+.ctl button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;transition:.25s var(--ease)}
+.ctl button:hover{border-color:var(--acc);color:var(--acc);background:rgba(var(--acc-rgb),.08)}
+.rail{overflow-x:auto;cursor:grab;scrollbar-width:none;margin:0 -24px;padding:0 24px 8px;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 28px,#000 calc(100% - 70px),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 28px,#000 calc(100% - 70px),transparent)}
+.rail::-webkit-scrollbar{display:none}
+.rail.drag{cursor:grabbing}
+.track-line{display:flex;gap:22px;width:max-content;position:relative}
+.track-line::before{content:"";position:absolute;left:0;right:0;top:10px;height:1px;background:linear-gradient(90deg,var(--acc),var(--line) 25%)}
+.rel{position:relative;width:176px;padding-top:46px;display:block}
+.rel::before{content:"";position:absolute;top:6px;left:0;width:9px;height:9px;border-radius:50%;background:var(--bg);border:2px solid var(--acc);transition:.3s var(--ease)}
+.rel:hover::before{background:var(--acc);transform:scale(1.5)}
+.rel .when{position:absolute;top:20px;left:0;font-size:13px;color:var(--mut)}
+.rel .t{margin-top:12px;font-weight:600;line-height:1.25}
+.rel .d{font-size:13px;color:var(--mut);margin-top:2px}
+.yr{align-self:stretch;position:relative;width:46px;flex:none}
+.yr span{position:absolute;top:46px;left:0;writing-mode:vertical-rl;transform:rotate(180deg);
+  font:800 54px/1 var(--display);color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.28);letter-spacing:-.02em}
+
+/* ===== страницы артиста / релиза / трека ===== */
+.a-hero{display:grid;grid-template-columns:1fr minmax(220px,300px);gap:40px;align-items:end;padding-top:48px}
+.a-hero h1{font-size:clamp(3rem,10.5vw,8.5rem);letter-spacing:-.045em;margin:14px 0 10px;overflow-wrap:anywhere}
+.a-hero .bio{max-width:56ch;color:#cfc8de;font-size:18px}
+.a-photo{aspect-ratio:3/4;border-radius:22px;background:var(--photo) center/cover;filter:grayscale(1) contrast(1.1);transition:filter .6s;box-shadow:0 30px 70px -30px rgba(var(--acc-rgb),.5)}
+.a-photo:hover{filter:none}
+@media(max-width:760px){.a-hero{grid-template-columns:1fr;gap:24px}.a-photo{order:-1;aspect-ratio:4/3;max-width:420px}}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:44px 0 8px}
+.tab{padding:10px 18px;border-radius:99px;border:1px solid var(--line);color:var(--mut);font-weight:500;transition:.25s var(--ease)}
+.tab:hover{color:var(--ink);border-color:rgba(255,255,255,.25)}
+.tab.on{background:var(--acc);border-color:var(--acc);color:#0a0811}
+.yh{display:flex;align-items:baseline;gap:14px;margin:38px 0 16px}
+.yh b{font:800 28px/1 var(--display);color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.4)}
+.yh span{flex:1;height:1px;background:var(--line)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:22px}
+.card .t{margin-top:12px;font-weight:600;line-height:1.25}
+.card .d{font-size:13px;color:var(--mut)}
+@media(max-width:520px){.grid{grid-template-columns:repeat(2,1fr);gap:16px}}
+
+.r-hero{display:grid;grid-template-columns:minmax(220px,340px) 1fr;gap:clamp(24px,5vw,64px);align-items:end;padding-top:44px}
+.r-hero h1{font-size:clamp(2rem,5.5vw,4.4rem);margin:16px 0 12px;overflow-wrap:anywhere}
+.r-hero .credits{font-size:18px}
+.r-hero .meta{margin-top:10px;color:var(--mut)}
+.note{margin-top:8px;color:var(--mut);font-size:15px}.note a{color:var(--acc)}
+@media(max-width:760px){.r-hero{grid-template-columns:1fr}.r-hero .art{max-width:340px}}
+.btn{display:inline-flex;align-items:center;gap:10px;margin-top:22px;padding:13px 24px 13px 18px;border-radius:99px;background:var(--acc);color:#0a0811;font-weight:600;transition:.3s var(--ease)}
+.btn:hover{transform:translateY(-2px);box-shadow:0 14px 34px -12px rgba(var(--acc-rgb),.7)}
+.btn[disabled]{background:transparent;color:var(--mut);border:1px dashed var(--line);cursor:default;transform:none;box-shadow:none}
+.btn svg{width:18px;height:18px}
+.btn .ic-pause,.btn.playing .ic-play{display:none}.btn.playing .ic-pause{display:block}
+
+.plats{margin-top:24px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.pl-h{font-size:14px;color:var(--mut);margin-right:4px}
+.plat{padding:7px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.28);font-size:14px;font-weight:500;transition:.25s var(--ease)}
+.plat:hover{border-color:var(--acc);color:var(--acc);transform:translateY(-2px)}
+.plat.s{border-style:dashed;border-color:var(--line);color:var(--mut)}
+.list{margin-top:34px}
+.row{display:grid;grid-template-columns:46px 1fr auto;align-items:center;gap:12px;padding:15px 12px;border-bottom:1px solid var(--line);
+  transition:background .25s,padding .3s var(--ease)}
+.row:first-child{border-top:1px solid var(--line)}
+.row:hover{background:rgba(var(--acc-rgb),.08);padding-left:22px}
+.row .n{color:var(--mut);font-variant-numeric:tabular-nums;transition:color .2s}
+.row:hover .n{color:var(--acc)}
+.row .tt{font-weight:500;font-size:17px}
+.row .sub{font-size:13px;color:var(--mut)}
+.row .du{color:var(--mut);font-variant-numeric:tabular-nums}
+.eq{display:none;gap:3px;align-items:flex-end;height:16px}
+.eq i{width:3px;background:var(--acc);height:30%;animation:eq 1s ease-in-out infinite}
+.eq i:nth-child(2){animation-delay:.2s}.eq i:nth-child(3){animation-delay:.4s}
+@keyframes eq{50%{height:100%}}
+.row.now .n{color:var(--acc)} .row.now .tt{color:var(--acc)}
+.row.now.playing .eq{display:flex}.row.now.playing .num{display:none}
+
+.t-page{display:grid;grid-template-columns:minmax(240px,400px) 1fr;gap:clamp(28px,6vw,80px);padding-top:44px;align-items:start}
+.t-art{position:sticky;top:calc(var(--hdr) + 28px)}
+.t-page h1{font-size:clamp(1.9rem,4.4vw,3.4rem);margin:14px 0 12px;overflow-wrap:anywhere}
+.t-page .credits{font-size:18px}
+.t-page .meta{margin-top:8px;color:var(--mut);font-size:15px}.t-page .meta a{color:var(--ink);border-bottom:1px solid var(--line)}.t-page .meta a:hover{color:var(--acc)}
+.lyrics{margin-top:48px;max-width:34em;font-size:clamp(1.05rem,1.6vw,1.25rem);line-height:1.8;color:#e4def0}
+.lyrics .sec{display:block;margin:26px 0 8px;font-size:14px;font-weight:600;color:var(--acc)}
+.lyrics .st{margin-bottom:22px}
+.nolyr{margin-top:48px;padding:26px;border:1px dashed var(--line);border-radius:16px;color:var(--mut);max-width:34em}
+@media(max-width:860px){.t-page{grid-template-columns:1fr}.t-art{position:static;max-width:340px}}
+.empty{margin-top:30px;padding:34px;border:1px dashed var(--line);border-radius:18px;color:var(--mut);text-align:center}
+footer{max-width:1240px;margin:0 auto;padding:30px 24px 50px;color:var(--mut);font-size:14px;display:flex;gap:18px;flex-wrap:wrap;border-top:1px solid var(--line)}
+footer a:hover{color:var(--acc)}
+
+/* ===== плеер ===== */
+.dock{position:fixed;left:50%;bottom:16px;z-index:40;width:min(980px,calc(100% - 24px));transform:translate(-50%,160%);transition:transform .6s var(--ease);
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto minmax(0,1.3fr);align-items:center;gap:16px;padding:10px 18px 10px 10px;border-radius:20px;
+  background:rgba(18,14,28,.78);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--line);
+  box-shadow:0 24px 60px -20px #000;view-transition-name:dock}
+.dock.on{transform:translate(-50%,0)}
+.d-cover{width:52px;height:52px;border-radius:12px;background-size:cover;background-position:center;background-color:#222}
+.d-info{min-width:0;display:flex;flex-direction:column}
+.d-title{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.d-title:hover{color:var(--acc)}
+.d-who{font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d-ctl{display:flex;align-items:center;gap:4px}
+.d-ctl button{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;transition:.2s}
+.d-ctl button:hover{background:rgba(255,255,255,.1)}
+.d-ctl .d-play{background:var(--acc);color:#0a0811;width:46px;height:46px}.d-ctl .d-play:hover{background:var(--acc);transform:scale(1.07)}
+.d-play .ic-pause,.d-play.playing .ic-play{display:none}.d-play.playing .ic-pause{display:block}
+.d-prog{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+.bar{flex:1;height:18px;display:flex;align-items:center;cursor:pointer}
+.bar::before{content:"";flex:1;height:4px;border-radius:4px;background:rgba(255,255,255,.15);box-shadow:inset 0 0 0 0 var(--acc)}
+.bar{position:relative}
+.bar i{position:absolute;left:0;top:7px;height:4px;border-radius:4px;background:var(--acc);width:0}
+@media(max-width:700px){.dock{grid-template-columns:auto 1fr auto;gap:10px}.d-prog{display:none}.dock .d-ctl button:not(.d-play){display:none}}
+
+/* ===== анимации ===== */
+::view-transition-old(root),::view-transition-new(root){animation-duration:.4s}
+::view-transition-group(cover){animation-duration:.55s;animation-timing-function:var(--ease)}
+.intro .panel{animation:panelIn 1s var(--ease) both;animation-delay:calc(var(--i)*.13s)}
+.intro .name{animation:rise .9s var(--ease) both;animation-delay:calc(.4s + var(--i)*.13s)}
+.intro .role,.intro .tag,.intro .count{animation:fade .8s ease both;animation-delay:calc(.8s + var(--i)*.13s)}
+@keyframes panelIn{from{clip-path:inset(100% 0 0 0 round 22px)}to{clip-path:inset(0 round 22px)}}
+@keyframes rise{from{transform:translateY(115%)}to{transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@media print{
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .tilt{transform:none!important}
+}
+
+/* ===== Дополнительная плавность интерфейса ===== */
+html { scroll-behavior:smooth; }
+@media (hover:hover) and (pointer:fine) {
+  .card, .rel { transition:transform .48s var(--ease); }
+  .card:hover, .rel:hover { transform:translateY(-7px); }
+  .cover { transition:box-shadow .5s var(--ease), border-radius .5s var(--ease); }
+  .cover img { transition:scale .85s var(--ease); }
+  .card:hover .cover img, .rel:hover .cover img { scale:1.065; }
+  .card:hover .cover, .rel:hover .cover { box-shadow:0 26px 60px -20px rgba(var(--acc-rgb),.33); }
+  .panel .panel-in { transition:transform .65s var(--ease); }
+  .panel:hover .panel-in { transform:translateY(-8px); }
+  .tab, .plat, .nav a, .ctl button, .back { transition-duration:.36s; transition-timing-function:var(--ease); }
+  .tab:hover, .nav a:not(.on):hover { transform:translateY(-2px); }
+  .row { transition:background .35s var(--ease), padding .45s var(--ease); }
+}
+@keyframes softPageIn {
+  from { opacity:0; transform:translateY(18px); filter:blur(5px); }
+  to { opacity:1; transform:translateY(0); filter:blur(0); }
+}
+@keyframes softHeaderIn {
+  from { opacity:0; transform:translateY(-12px); }
+  to { opacity:1; transform:translateY(0); }
+}
+@media screen {
+  #hdr { animation:softHeaderIn .72s var(--ease) both; }
+  ::view-transition-old(root) { animation-duration:.3s; animation-timing-function:ease-in; }
+  ::view-transition-new(root) { animation-duration:.55s; animation-timing-function:var(--ease); }
+  ::view-transition-group(cover) { animation-duration:.7s; animation-timing-function:var(--ease); }
+  .dock { transition:transform .75s var(--ease), box-shadow .4s var(--ease); }
+  .dock.on { box-shadow:0 25px 80px -22px rgba(var(--acc-rgb),.24); }
+}
+@media print { html { scroll-behavior:auto; } }
+
+
+/* Принудительно включённый motion-design по запросу владельца сайта. */
+@media screen {
+  .panel { transition: flex .95s cubic-bezier(.16,1,.3,1), box-shadow .6s ease !important; }
+  .panels .panel::before { transition: filter .95s ease, transform 1.3s cubic-bezier(.16,1,.3,1) !important; }
+}
+/* ===== CINEMATIC MOTION V2 ===== */
+@keyframes cinemaPanel {
+  0% { opacity:0; transform:translate3d(0,85px,0) scale(.93); filter:blur(12px) brightness(.7); }
+  60% { opacity:1; filter:blur(0) brightness(1); }
+  100% { opacity:1; transform:translate3d(0,0,0) scale(1); filter:blur(0) brightness(1); }
+}
+@keyframes cinemaText {
+  0% { opacity:0; transform:translate3d(0,38px,0); filter:blur(8px); }
+  100% { opacity:1; transform:none; filter:blur(0); }
+}
+@keyframes cinemaReveal {
+  0% { opacity:0; transform:translate3d(0,42px,0) scale(.96); filter:blur(7px); }
+  100% { opacity:1; transform:translate3d(0,0,0) scale(1); filter:blur(0); }
+}
+@keyframes cinemaGlow {
+  0%,100% { opacity:.55; transform:translate3d(-2%,0,0) scale(1); }
+  50% { opacity:1; transform:translate3d(2%,-2%,0) scale(1.07); }
+}
+@keyframes cinemaLine { from { transform:scaleX(0); opacity:0 } to { transform:scaleX(1); opacity:1 } }
+/* Animate the actual home hero on EVERY visit, including refresh. */
+@media screen {
+  #amb:not(.img) { animation:cinemaGlow 14s ease-in-out infinite alternate; transform-origin:center; }
+  #app.cinematic .panel { animation:cinemaPanel 1.05s cubic-bezier(.16,1,.3,1) both; animation-delay:calc(var(--i, 0) * 140ms + 40ms); }
+  #app.cinematic .panel .name { animation:cinemaText .85s cubic-bezier(.16,1,.3,1) both; animation-delay:calc(var(--i, 0) * 140ms + 350ms); }
+  #app.cinematic .panel .role, #app.cinematic .panel .count { animation:cinemaText .8s cubic-bezier(.16,1,.3,1) both; animation-delay:calc(var(--i, 0) * 140ms + 500ms); }
+  #app.cinematic .a-hero > *, #app.cinematic .r-hero > *, #app.cinematic .t-page > * { animation:cinemaReveal .85s cubic-bezier(.16,1,.3,1) both; }
+  #app.cinematic .a-hero > :nth-child(2), #app.cinematic .r-hero > :nth-child(2), #app.cinematic .t-page > :nth-child(2) { animation-delay:120ms; }
+  #app .fx-in { animation:cinemaReveal .8s cubic-bezier(.16,1,.3,1) both; animation-delay:var(--fx-delay,0ms); }
+  #app .sec-head h2 { text-wrap:balance; }
+  .panel::before { transition:filter .95s cubic-bezier(.16,1,.3,1),transform 1.3s cubic-bezier(.16,1,.3,1); }
+  .panel { transition:flex .95s cubic-bezier(.16,1,.3,1),box-shadow .6s ease; }
+  .panel:hover { box-shadow:inset 0 0 0 1px rgba(var(--a-rgb),.35),0 22px 75px -24px rgba(var(--a-rgb),.45); }
+  .panel::after { transition:background .6s ease; }
+  .panel-in { position:relative; z-index:1; }
+  .panel-in::before { content:""; position:absolute; width:140px; height:2px; left:clamp(18px,2.4vw,34px); bottom:15px; transform:scaleX(0); transform-origin:left; background:var(--a); box-shadow:0 0 20px var(--a); transition:transform .65s cubic-bezier(.16,1,.3,1); }
+  .panel:hover .panel-in::before { transform:scaleX(1); }
+  .cover { isolation:isolate; }
+  .cover::before { content:"";position:absolute;z-index:2;inset:-80%;pointer-events:none; background:linear-gradient(110deg,transparent 42%,rgba(255,255,255,.20) 50%,transparent 58%); transform:translateX(-85%) rotate(10deg); transition:transform .95s cubic-bezier(.16,1,.3,1); }
+  .card:hover .cover::before,.rel:hover .cover::before { transform:translateX(85%) rotate(10deg); }
+  .tab:active,.btn:active,.ctl button:active { transform:scale(.95); }
+  @media (hover:hover) and (pointer:fine){
+    .card,.rel { transition:transform .6s cubic-bezier(.16,1,.3,1); }
+    .card:hover,.rel:hover { transform:translateY(-10px); }
+    .cover img { transition:transform 1s cubic-bezier(.16,1,.3,1); }
+    .card:hover .cover img,.rel:hover .cover img { transform:scale(1.08); }
+  }
+}
+@media print{
+  #app .fx-in,#app.cinematic .panel,#app.cinematic .panel .name { animation:none!important; }
+}
+
+
+/* ===== НОВЫЕ РЕЛИЗЫ — автоматически 7 календарных дней с даты выхода ===== */
+.new-releases{padding-top:26px}
+.new-releases-heading{display:flex;align-items:center;gap:12px;margin:0 0 18px}
+.new-releases-heading h2{font-size:clamp(1.3rem,2.5vw,2rem)}
+.new-releases-indicator{width:9px;height:9px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 5px rgba(var(--acc-rgb),.12),0 0 24px var(--acc)}
+.new-releases-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.new-releases-grid:has(> :only-child){grid-template-columns:1fr}
+.new-release{--new-color:#b9a8ff;position:relative;isolation:isolate;display:flex;align-items:flex-end;min-height:clamp(270px,32vw,390px);padding:clamp(20px,3vw,36px);border:1px solid rgba(255,255,255,.13);border-radius:22px;overflow:hidden;background:#13101d;transition:transform .65s cubic-bezier(.16,1,.3,1),border-color .5s,box-shadow .6s}
+.new-release-art{position:absolute;inset:0;z-index:-2;background:linear-gradient(130deg,var(--new-color),#0a0811);overflow:hidden}
+.new-release-art img{height:100%;width:100%;object-fit:cover;object-position:center;opacity:.58;filter:saturate(.87);transform:scale(1.04);transition:transform 1.1s cubic-bezier(.16,1,.3,1),opacity .7s,filter .7s}
+.new-release::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(0deg,rgba(7,5,13,.98),rgba(7,5,13,.78) 35%,rgba(7,5,13,.04) 95%)}
+.new-release-inner{position:relative;max-width:100%;text-shadow:0 2px 18px rgba(0,0,0,.35)}
+.new-release-tag{display:inline-flex;align-items:center;gap:8px;padding:6px 11px;border-radius:99px;background:rgba(8,7,15,.7);border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(9px);font-size:12px;letter-spacing:.07em;font-weight:700;text-transform:uppercase}
+.new-release-title{font:800 clamp(1.6rem,3.1vw,2.9rem)/1.12 var(--display);letter-spacing:-.035em;overflow-wrap:anywhere;margin:16px 0 10px}
+.new-release-info{color:#e1dcea;font-size:14px}
+.new-release-more{display:inline-flex;gap:9px;align-items:center;margin-top:20px;color:#fff;font-weight:600;font-size:14px}
+.new-release-more span{transition:transform .35s var(--ease)}
+.new-release:hover{transform:translateY(-6px);border-color:var(--new-color);box-shadow:0 24px 60px -24px rgba(0,0,0,.75)}
+.new-release:hover .new-release-art img{transform:scale(1.12);opacity:.8;filter:saturate(1.1)}
+.new-release:hover .new-release-more span{transform:translateX(6px)}
+@media(max-width:700px){.new-releases-grid{grid-template-columns:1fr}.new-release{min-height:300px}}
+@media(prefers-reduced-motion:reduce){.new-release,.new-release-art img,.new-release-more span{transition:none}}
+
+
+/* Компактные новые релизы: после артистов, без огромных баннеров. */
+.new-releases{padding-top:44px}
+.new-releases-heading{margin-bottom:14px}
+.new-releases-heading h2{font-size:clamp(1.15rem,2vw,1.55rem)}
+.new-releases-grid{gap:12px}
+.new-release{min-height:146px;padding:13px;gap:18px;align-items:center;border-radius:17px;}
+.new-release-art{position:relative;inset:auto;z-index:0;flex:0 0 118px;width:118px;height:118px;border-radius:12px;overflow:hidden;}
+.new-release-art img{opacity:1;filter:none;transform:scale(1);}
+.new-release::before{display:none}
+.new-release-inner{flex:1;min-width:0;text-shadow:none}
+.new-release-tag{font-size:10px;padding:3px 8px;letter-spacing:.03em}
+.new-release-title{font-size:clamp(1.05rem,1.7vw,1.4rem);margin:8px 0 6px;line-height:1.2}
+.new-release-info{font-size:12px;color:var(--mut)}
+.new-release-more{margin-top:9px;font-size:12px;color:var(--acc)}
+.new-release:hover .new-release-art img{transform:scale(1.07);opacity:1;filter:none}
+@media(max-width:700px){
+  .new-releases{padding-top:32px}
+  .new-release{min-height:114px;padding:10px;gap:12px}
+  .new-release-art{flex-basis:92px;width:92px;height:92px;border-radius:10px}
+  .new-release-title{font-size:1rem;margin:6px 0 4px}
+  .new-release-more{margin-top:6px}
+}
+
+
+/* Громкость в плашке плеера — независимо от страницы. */
+.dock{width:min(1100px,calc(100% - 24px));grid-template-columns:auto minmax(110px,1fr) auto minmax(150px,1.15fr) 130px;gap:14px}
+.d-volume{display:flex;align-items:center;gap:8px;min-width:0}
+.d-volume button{width:34px;height:34px;flex:none;display:grid;place-items:center;border-radius:50%;color:var(--mut);transition:background .25s,color .25s}
+.d-volume button:hover{color:var(--ink);background:rgba(255,255,255,.09)}
+.d-volume input{--volume-fill:80%;width:100%;min-width:0;height:18px;margin:0;appearance:none;-webkit-appearance:none;background:transparent;cursor:pointer;accent-color:var(--acc);touch-action:pan-x}
+.d-volume input::-webkit-slider-runnable-track{height:5px;border-radius:99px;background:linear-gradient(to right,var(--acc) var(--volume-fill),rgba(255,255,255,.18) var(--volume-fill))}
+.d-volume input::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;margin-top:-4px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.15);transition:box-shadow .2s}
+.d-volume input:hover::-webkit-slider-thumb{box-shadow:0 0 0 5px rgba(var(--acc-rgb),.22)}
+.d-volume input::-moz-range-track{height:5px;border-radius:99px;background:rgba(255,255,255,.18)}
+.d-volume input::-moz-range-progress{height:5px;border-radius:99px;background:var(--acc)}
+.d-volume input::-moz-range-thumb{width:13px;height:13px;border:0;border-radius:50%;background:var(--ink)}
+@media(max-width:850px){.dock{grid-template-columns:auto minmax(0,1fr) auto 105px}.d-prog{display:none}}
+@media(max-width:700px){.dock{grid-template-columns:auto minmax(0,1fr) auto;gap:10px}.d-volume{grid-column:1/-1;justify-self:stretch;max-width:none;padding:0 8px 2px}.d-volume input{width:100%}}
+
+
+/* ===== Миниатюрная красная дыра — запечатанный портал ===== */
+.rift-teaser{position:relative;height:158px;margin:6px 0 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;isolation:isolate;user-select:none;cursor:default;pointer-events:auto}
+.rift-teaser::before{content:"";position:absolute;width:230px;height:135px;top:0;left:50%;transform:translateX(-50%);background:radial-gradient(ellipse,rgba(195,12,29,.19) 0%,rgba(111,5,19,.09) 37%,transparent 73%);filter:blur(17px);animation:holeAura 5s ease-in-out infinite;z-index:-1}
+.rift-svg{display:block;width:154px;height:112px;overflow:visible;filter:drop-shadow(0 0 8px rgba(230,0,32,.3));animation:holeFloat 5.5s ease-in-out infinite}
+.rift-halo{fill:#9f071c;opacity:.12;filter:blur(12px)}
+.rift-lip-outer{fill:#38040e;stroke:#720b1b;stroke-width:1.6;stroke-linejoin:round}
+.rift-lip{fill:url(#riftRim);stroke:#e02a37;stroke-width:1.2;stroke-linejoin:round;filter:drop-shadow(0 0 4px rgba(226,0,33,.65))}
+.rift-hole{fill:url(#riftAbyss);stroke:#ff4b52;stroke-width:.7;stroke-linejoin:round}
+.rift-undershine{fill:none;stroke:#ff5554;stroke-width:1.8;stroke-linecap:round;opacity:.65;filter:drop-shadow(0 0 5px #ff172e)}
+.rift-shards{fill:none;stroke:#ba2632;stroke-width:1.25;stroke-linecap:round;opacity:.64}
+.rift-ember{fill:#ff7370;filter:drop-shadow(0 0 5px #ff243d);animation:holeEmber 4s ease-in-out infinite}
+.rift-ember:nth-of-type(2n){animation-delay:-1.7s}
+.rift-seal{font:600 8px/1.3 var(--display);letter-spacing:.18em;color:rgba(255,137,147,.6);text-align:center;text-transform:uppercase;text-shadow:0 0 10px rgba(230,19,42,.25)}
+@keyframes holeAura{0%,100%{opacity:.55;scale:.95}50%{opacity:1;scale:1.09}}
+@keyframes holeFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-3px) scale(1.025)}}
+@keyframes holeEmber{0%,100%{opacity:.25}45%{opacity:1}65%{opacity:.42}}
+@media(max-width:620px){.rift-teaser{height:130px;margin:0 0 10px}.rift-svg{width:136px;height:98px}.rift-seal{font-size:7px}}
+@media(prefers-reduced-motion:reduce){.rift-teaser::before,.rift-svg,.rift-ember{animation:none}}
+
+
+/* ===== Живой запечатанный разлом: постоянная анимация + реакция на наведение ===== */
+.rift-teaser{overflow:visible; -webkit-tap-highlight-color:transparent}
+.rift-svg{transform-origin:50% 50%; cursor:crosshair; transition:filter .55s ease}
+.rift-mouth{transform-origin:90px 65px; transform-box:view-box; animation:riftBreathe 3.8s ease-in-out infinite; transition:filter .5s ease}
+.rift-energy{fill:none;stroke:#ed1f38;stroke-width:2;opacity:.13;filter:blur(8px);transform-origin:90px 65px;animation:riftEnergy 3.5s ease-in-out infinite}
+.rift-lip-outer{animation:riftRimPulse 4.3s ease-in-out infinite}
+.rift-shards{animation:riftCrackle 2.8s ease-in-out infinite}
+.rift-particles circle{fill:#ff5364;filter:drop-shadow(0 0 3px #fd2038);transform-box:view-box;transform-origin:center;animation:riftParticle 3.1s ease-in-out infinite}
+.rift-particles circle:nth-child(2){animation-delay:-.9s;animation-duration:3.8s}
+.rift-particles circle:nth-child(3){animation-delay:-1.5s;animation-duration:2.7s}
+.rift-particles circle:nth-child(4){animation-delay:-2s;animation-duration:4.1s}
+.rift-particles circle:nth-child(5){animation-delay:-.4s;animation-duration:3.4s}
+.rift-particles circle:nth-child(6){animation-delay:-2.5s;animation-duration:3.6s}
+.rift-teaser::after{content:"";position:absolute;left:50%;top:47%;width:165px;height:88px;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;z-index:-1;background:radial-gradient(ellipse,rgba(226,7,35,.24),rgba(125,0,20,.06) 52%,transparent 75%);filter:blur(12px);animation:riftAfterglow 4.3s ease-in-out infinite}
+.rift-seal{animation:riftSealFlicker 6s ease-in-out infinite}
+@keyframes riftBreathe{0%,100%{transform:scale(1.015,1.03)}48%{transform:scale(1.07,1.09)}74%{transform:scale(1.035,1.055)}}
+@keyframes riftEnergy{0%,100%{opacity:.12;transform:scale(.9)}50%{opacity:.48;transform:scale(1.2)}}
+@keyframes riftRimPulse{0%,100%{stroke:#720b1b}50%{stroke:#c11b32}}
+@keyframes riftCrackle{0%,100%{opacity:.35}20%{opacity:.85}34%{opacity:.25}63%{opacity:.7}}
+@keyframes riftParticle{0%,100%{opacity:0;transform:translateY(5px) scale(.4)}25%{opacity:.9}75%{opacity:.6;transform:translateY(-10px) translateX(4px) scale(1.1)}}
+@keyframes riftAfterglow{0%,100%{opacity:.4;scale:.96}50%{opacity:.95;scale:1.13}}
+@keyframes riftSealFlicker{0%,82%,100%{opacity:.65}83%{opacity:.3}85%{opacity:.8}86%{opacity:.45}88%{opacity:.7}}
+/* При наведении дыра чуть расширяется, но остаётся запечатанной. */
+@media(hover:hover) and (pointer:fine){
+  .rift-teaser:hover .rift-mouth{animation:riftHoverBreath 2.2s ease-in-out infinite;filter:drop-shadow(0 0 7px rgba(255,33,59,.45))}
+  .rift-teaser:hover .rift-svg{filter:drop-shadow(0 0 15px rgba(242,18,47,.65))}
+  .rift-teaser:hover .rift-energy{animation-duration:1.8s}
+  .rift-teaser:hover::after{animation-duration:2s}
+  .rift-teaser:hover .rift-particles circle{animation-duration:1.5s}
+}
+@keyframes riftHoverBreath{0%,100%{transform:scale(1.12,1.16)}50%{transform:scale(1.17,1.2)}}
+@media(prefers-reduced-motion:reduce){.rift-mouth,.rift-energy,.rift-lip-outer,.rift-shards,.rift-particles circle,.rift-teaser::after,.rift-seal{animation:none!important}.rift-mouth{transform:scale(1.05)}}
+
+
+/* ===== ЖИВОЙ ПОРТАЛ: орбиты и вылетающие при наведении искры ===== */
+.rift-teaser { position:relative; }
+.rift-orbits,.rift-spark-field { position:absolute;inset:0;pointer-events:none;overflow:visible; }
+.rift-orbits { z-index:2;opacity:0;transition:opacity .3s ease; }
+.rift-teaser:hover .rift-orbits {opacity:1}
+.rift-orbits .orbit-dot { position:absolute;left:50%;top:39%;width:var(--sz);height:var(--sz);margin:calc(var(--sz) / -2);border-radius:50%;
+  background:#ffb3a3;box-shadow:0 0 5px 2px #ff354b,0 0 14px 4px #ce0c34;
+  transform-origin:center;opacity:0; }
+.rift-teaser:hover .orbit-dot {animation:riftSpin var(--speed) linear infinite;animation-delay:var(--delay)}
+@keyframes riftSpin {
+  0%{opacity:0;transform:rotate(var(--start)) translateX(var(--radius)) scale(.35)}
+  10%{opacity:.95}50%{opacity:.6;transform:rotate(calc(var(--start) + 180deg)) translateX(var(--radius)) scale(1.3)}
+  88%{opacity:1}100%{opacity:0;transform:rotate(calc(var(--start) + 360deg)) translateX(var(--radius)) scale(.35)}
+}
+.rift-spark-field {z-index:3;}
+.rift-spark { position:absolute;left:50%;top:39%;border-radius:100%;background:#fff5da;
+  box-shadow:0 0 5px 2px #ff5953,0 0 14px 3px #e60932;will-change:transform,opacity; }
+.rift-teaser:hover .rift-svg {filter:drop-shadow(0 0 19px rgba(255,18,47,.82)) drop-shadow(0 0 28px rgba(185,0,34,.33));}
+.rift-teaser:hover::before {opacity:1;filter:blur(22px);}
+@media(prefers-reduced-motion:reduce){.rift-orbits .orbit-dot,.rift-spark{animation:none!important}}
+
+
+/* ===== Поэтапное пробуждение разлома: 27.11 / 11.12 / 18.12 / 25.12 ===== */
+.rift-teaser{
+  --rift-grow:.82;
+  --rift-glow:.11;
+  height:clamp(164px,20vw,190px);
+  margin:12px 0 18px;
+  transition:height 1.45s cubic-bezier(.2,.75,.18,1);
+}
+.rift-teaser[data-rift-stage="1"]{--rift-grow:1;--rift-glow:.17;height:195px}
+.rift-teaser[data-rift-stage="2"]{--rift-grow:1.30;--rift-glow:.24;height:222px}
+.rift-teaser[data-rift-stage="3"]{--rift-grow:1.60;--rift-glow:.32;height:255px}
+.rift-teaser[data-rift-stage="4"]{--rift-grow:2.05;--rift-glow:.42;height:315px}
+/* Красно-чёрное затухание без видимых границ, плавно сливающееся с фоном. */
+.rift-teaser .rift-gradient{
+  position:absolute;z-index:-2;top:50%;left:50%;
+  width:min(1100px,114vw);height:340px;pointer-events:none;
+  transform:translate(-50%,-50%);
+  background:radial-gradient(ellipse 43% 43% at 50% 45%,
+     rgba(238,9,42,var(--rift-glow)) 0%,
+     rgba(124,3,26,.10) 36%,rgba(28,5,17,.055) 61%,
+     rgba(10,8,17,0) 85%);
+  filter:blur(15px);animation:riftGradientBreathe 6s ease-in-out infinite alternate;
+}
+@keyframes riftGradientBreathe{from{opacity:.74;scale:.98}to{opacity:1;scale:1.06}}
+.rift-teaser .rift-core{
+  position:relative;z-index:2;display:block;width:154px;height:112px;
+  transform:scale(var(--rift-grow));transform-origin:50% 50%;
+  transition:transform 1.8s cubic-bezier(.16,1,.3,1);
+}
+.rift-teaser:hover .rift-core{transform:scale(calc(var(--rift-grow) * 1.10))}
+.rift-core .rift-svg{width:100%;height:100%}
+.rift-teaser .rift-fractures{
+  position:absolute;z-index:0;top:4%;left:50%;width:min(1020px,104vw);
+  height:88%;transform:translateX(-50%);overflow:visible;
+  pointer-events:none;filter:drop-shadow(0 0 2px rgba(255,20,49,.47));
+}
+.rift-fracture{
+  fill:none;stroke:#b61931;stroke-width:1.45;
+  stroke-linejoin:round;stroke-linecap:round;
+  opacity:0;stroke-dasharray:380;stroke-dashoffset:380;
+}
+.rift-branch{stroke:#e32e46;stroke-width:.9}
+.rift-teaser[data-rift-stage="1"] .crack-stage-1,
+.rift-teaser[data-rift-stage="2"] .crack-stage-1,
+.rift-teaser[data-rift-stage="2"] .crack-stage-2,
+.rift-teaser[data-rift-stage="3"] .crack-stage-1,
+.rift-teaser[data-rift-stage="3"] .crack-stage-2,
+.rift-teaser[data-rift-stage="3"] .crack-stage-3,
+.rift-teaser[data-rift-stage="4"] .rift-fracture{
+  animation:riftFractureGrow 1.4s cubic-bezier(.18,.8,.3,1) both;
+  animation-delay:var(--crack-delay,0s);
+}
+@keyframes riftFractureGrow{from{opacity:0;stroke-dashoffset:380}to{opacity:.75;stroke-dashoffset:0}}
+.rift-teaser:hover .rift-fractures{filter:drop-shadow(0 0 5px rgba(255,39,69,.75))}
+.rift-teaser[data-rift-stage="4"] .rift-hole{filter:drop-shadow(0 0 7px #e30e35)}
+.rift-teaser[data-rift-stage="4"] .rift-energy{opacity:.75}
+.rift-teaser[data-rift-stage="4"] .rift-seal{color:#ff7183;letter-spacing:.28em}
+@media(max-width:620px){
+ .rift-teaser{height:155px}
+ .rift-teaser[data-rift-stage="1"]{height:173px}
+ .rift-teaser[data-rift-stage="2"]{height:193px}
+ .rift-teaser[data-rift-stage="3"]{height:215px}
+ .rift-teaser[data-rift-stage="4"]{height:255px}
+ .rift-teaser .rift-core{width:136px;height:98px}
+ .rift-teaser .rift-fractures{width:112vw}
+}
+@media print{
+ .rift-teaser .rift-gradient,.rift-fracture{animation:none!important}
+ .rift-fracture{stroke-dashoffset:0!important;opacity:.65!important}
+}
+
+
+/* ===== 25 December: enter the other side ===== */
+.rift-teaser[data-rift-stage="4"]{cursor:pointer}
+.rift-teaser[data-rift-stage="4"]:focus-visible{outline:2px solid #ff4059;outline-offset:3px;border-radius:18px}
+.rift-teaser[data-rift-stage="4"] .rift-core{filter:drop-shadow(0 0 15px rgba(255,13,45,.5))}
+.rift-teaser[data-rift-stage="4"]:hover .rift-core{transform:scale(calc(var(--rift-grow) * 1.22))}
+.rift-teaser[data-rift-stage="4"] .rift-seal{font-size:10px;color:#ff8c99;text-shadow:0 0 16px #e50935}
+.rift-caption{display:contents}
+.rift-release-art,.rift-release-label{display:none}
+.rift-teaser[data-rift-stage="4"]{padding-bottom:42px}
+.rift-teaser[data-rift-stage="4"] .rift-svg{cursor:pointer}
+.rift-teaser[data-rift-stage="4"] .rift-release-art{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  display:block;width:48px;aspect-ratio:1;border:1px solid #ff687d;border-radius:4px;
+  overflow:hidden;pointer-events:none;
+  background:radial-gradient(circle at 50% 50%,#090205 24%,#6a1021 61%,#18050c 100%);
+  box-shadow:0 0 12px #ed304f,0 0 24px rgba(237,48,79,.45);
+}
+.rift-release-art img{display:block;width:100%;height:100%;object-fit:contain}
+.rift-teaser[data-rift-stage="4"] .rift-caption{
+  position:absolute;bottom:14px;inset-inline:0;z-index:3;
+  display:grid;justify-items:center;gap:6px;text-align:center;
+}
+.rift-teaser[data-rift-stage="4"] .rift-release-label{
+  display:block;color:#ffe3e8;font:700 13px/1.3 var(--display);
+  text-transform:uppercase;letter-spacing:.12em;text-shadow:0 0 14px #e50935;
+}
+/* Portal destination is visually isolated from the existing site. */
+body.portal-world{--bg:#090203;--ink:#f9edf0;--mut:#ba8e95;--acc:#ed304f;--acc-rgb:237,48,79;background:#090203}
+body.portal-world #amb{opacity:0!important}
+body.portal-world #hdr{background:rgba(8,0,3,.8);border-color:rgba(255,49,74,.2)}
+body.portal-world footer{border-color:rgba(255,49,74,.16)}
+body.portal-world main{max-width:none;padding:0;min-height:82svh}
+.portal-realm{
+  min-height:calc(100svh - var(--hdr));position:relative;overflow:hidden;isolation:isolate;color:#fff1ee;
+  background:
+    linear-gradient(180deg,transparent 31%,#62000955 69%,#140003 100%),
+    radial-gradient(ellipse at 43% 12%,#ff2519 0%,#ed0b12 37%,#b20014 73%,#540008 100%);
+}
+.portal-realm::before,.portal-realm::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none}
+.portal-realm::before{
+  inset:-4%;opacity:.72;
+  background:linear-gradient(101deg,#0e0005 0%,#5f000a 17%,#f91b18 44%,#78000b 69%,#210008 100%);
+  clip-path:polygon(0 10%,38% 12%,38% 13%,100% 9%,100% 15%,76% 17%,76% 16%,0 19%,0 34%,100% 29%,100% 31%,61% 34%,61% 36%,0 39%,0 57%,76% 54%,76% 53%,100% 52%,100% 59%,47% 61%,47% 63%,0 64%,0 83%,100% 77%,100% 80%,54% 83%,54% 86%,0 89%);
+}
+.portal-realm::after{
+  opacity:.56;mix-blend-mode:overlay;
+  background-image:repeating-linear-gradient(0deg,#0a0003 0 1px,transparent 1px 5px),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.57' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)' opacity='.78'/%3E%3C/svg%3E");
+}
+.portal-space{max-width:1120px;margin:auto;padding:clamp(35px,7vw,90px) 24px 110px;position:relative}
+.portal-kicker{font:700 11px/1.6 var(--display);letter-spacing:.24em;color:#fff1ee;text-transform:uppercase;text-shadow:1px 1px #2a0005,-1px 0 #a00018}
+.portal-title{
+  font:800 clamp(1.75rem,7.6vw,7.5rem)/.99 var(--display);letter-spacing:-.07em;text-transform:uppercase;
+  overflow-wrap:anywhere;margin:18px 0;max-width:1000px;color:#100003;
+  text-shadow:-.035em 0 #ff4237,.043em .018em #730014;transform:skewX(-5deg);transform-origin:left center;
+}
+.portal-title span{display:block;font-size:1.18em;color:#210005;text-shadow:.025em -.018em #ff5748,-.032em .025em #68000b}
+.portal-lead{font:600 clamp(1rem,2vw,1.23rem)/1.55 var(--body);color:#fff1ee;max-width:590px;margin-bottom:32px;text-shadow:1px 1px #390005,-1px 0 #820014}
+.portal-card{display:grid;grid-template-columns:minmax(210px,360px) minmax(0,1fr);gap:clamp(24px,5vw,70px);align-items:center;margin-top:40px;padding:clamp(16px,3vw,36px);background:#170005ee;border:1px solid #ff6454a8;border-radius:14px;box-shadow:6px 4px #53000e,-3px -2px #ff34215c,0 28px 85px #190005aa}
+.portal-art{width:100%;height:auto;aspect-ratio:1;object-fit:contain;border-radius:12px;background:#180307;box-shadow:0 0 70px rgba(250,18,53,.25)}
+.portal-card h2{font:800 clamp(1.45rem,3vw,3rem)/1.1 var(--display);margin:12px 0 15px;overflow-wrap:anywhere;text-shadow:-2px 1px #da2038,2px -1px #6e283e}
+.portal-card p{color:#e6bac0;line-height:1.75;text-shadow:1px 0 #8d1225}
+.portal-back{display:inline-flex;align-items:center;gap:10px;margin-top:26px;padding:12px 22px;border:1px solid #bb4957;border-radius:99px;color:#ffdce1;text-shadow:1px 0 #8d1225;transition:background .3s,transform .3s}
+.portal-back:hover{background:rgba(255,41,77,.14);transform:translateX(-4px)}
+.portal-note{font-size:12px;color:#966c73;margin-top:18px}
+/* Full-screen tear: two jagged halves, red void, and flash. */
+.portal-transition{position:fixed;inset:0;z-index:9999;overflow:hidden;pointer-events:all;isolation:isolate;background:#070001}
+.portal-transition .portal-void{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,#ff3857 0%,#ba0a2b 15%,#42000e 44%,#070001 78%);animation:portalVoid 1.45s ease-out both}
+.portal-transition .tear-half{position:absolute;inset:-4%;background:#0a0811;filter:drop-shadow(0 0 26px #fd1642);animation-duration:1.3s;animation-timing-function:cubic-bezier(.4,0,.2,1);animation-fill-mode:both}
+.portal-transition .tear-left{clip-path:polygon(0 0,51% 0,48% 11%,53% 20%,47% 33%,50% 45%,46% 56%,53% 68%,48% 82%,50% 100%,0 100%);animation-name:tearLeft}
+.portal-transition .tear-right{clip-path:polygon(51% 0,100% 0,100% 100%,50% 100%,48% 82%,53% 68%,46% 56%,50% 45%,47% 33%,53% 20%,48% 11%);animation-name:tearRight}
+.portal-transition .portal-flash{position:absolute;inset:0;background:#f82247;animation:portalFlash 1.4s both;mix-blend-mode:screen}
+.portal-transition .portal-core{position:absolute;left:50%;top:50%;width:17vw;height:17vw;min-width:80px;min-height:80px;border-radius:50%;transform:translate(-50%,-50%);background:#020002;box-shadow:0 0 80px 24px #f2133f;animation:portalCollapse 1.4s ease-in both}
+@keyframes tearLeft{0%,15%{transform:translateX(0)}100%{transform:translateX(-110%) rotate(-3deg)}}
+@keyframes tearRight{0%,15%{transform:translateX(0)}100%{transform:translateX(110%) rotate(3deg)}}
+@keyframes portalVoid{0%{filter:brightness(.4)}80%{filter:brightness(1.6)}100%{filter:brightness(.6)}}
+@keyframes portalFlash{0%,35%{opacity:0}53%{opacity:.68}72%,100%{opacity:0}}
+@keyframes portalCollapse{0%,20%{transform:translate(-50%,-50%) scale(.05);opacity:0}55%{opacity:1}100%{transform:translate(-50%,-50%) scale(20);opacity:0}}
+@media(max-width:680px){.portal-card{grid-template-columns:1fr}.portal-art{max-width:320px;width:100%}.portal-space{padding:36px 16px 75px}}
+@media(prefers-reduced-motion:reduce){.portal-transition{display:none}}
+
+
+/* PORTAL CINEMA FIX: visible tear in both directions, including browser Back. */
+.portal-cinema{position:fixed;inset:0;z-index:99999;pointer-events:all;overflow:hidden;isolation:isolate;background:transparent}
+.portal-cinema__world{position:absolute;inset:-2px;will-change:clip-path,opacity;clip-path:circle(0% at 50% 47%);background:radial-gradient(ellipse at 50% 47%,#020002 0 13%,#45000f 25%,#ef183c 40%,#39000a 67%,#080005 100%);animation:cinemaRip 1.65s cubic-bezier(.18,.65,.25,1) both}
+.portal-cinema.exit .portal-cinema__world{background:radial-gradient(ellipse at 50% 47%,#08050f 0 14%,#24102e 26%,#fc244b 40%,#36000d 65%,#060008 100%)}
+.portal-cinema__world::before{content:"";position:absolute;inset:-45%;background:conic-gradient(from 30deg at 50% 47%,transparent 0 10%,rgba(255,28,65,.65) 13%,transparent 17% 25%,rgba(255,70,96,.75) 29%,transparent 34% 48%,rgba(255,25,60,.65) 52%,transparent 58% 75%,rgba(255,33,66,.75) 81%,transparent 88%);filter:blur(24px);animation:cinemaSpin 1.65s ease-out both}
+.portal-cinema__cracks{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:#ff2d51;stroke-linecap:round;stroke-linejoin:bevel;stroke-width:2.5;filter:drop-shadow(0 0 7px #f00032) drop-shadow(0 0 18px #e10028);animation:cinemaCracks 1.65s ease-out both}
+.portal-cinema__cracks path{stroke-dasharray:1100;stroke-dashoffset:1100;animation:cinemaDraw .66s ease-out .12s forwards}
+.portal-cinema__flash{position:absolute;inset:0;background:#ff2d52;mix-blend-mode:screen;opacity:0;animation:cinemaFlash 1.65s ease-in-out both}
+.portal-cinema__label{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:800 clamp(16px,3vw,38px)/1.2 var(--display);color:#ffe0e6;letter-spacing:.18em;text-align:center;white-space:nowrap;text-shadow:0 0 28px #ff2448;animation:cinemaLabel 1.65s ease both}
+@keyframes cinemaRip{0%{clip-path:circle(0% at 50% 47%);opacity:1}14%{clip-path:circle(4% at 50% 47%);opacity:1}54%{clip-path:circle(125% at 50% 47%);opacity:1}72%{clip-path:circle(150% at 50% 47%);opacity:1}100%{clip-path:circle(150% at 50% 47%);opacity:0}}
+@keyframes cinemaSpin{0%{transform:rotate(-45deg) scale(.4)}65%{transform:rotate(90deg) scale(1.1)}100%{transform:rotate(125deg) scale(1.2)}}
+@keyframes cinemaCracks{0%,7%{opacity:0;transform:scale(.82)}20%,52%{opacity:1;transform:scale(1)}72%,100%{opacity:0;transform:scale(1.18)}}
+@keyframes cinemaDraw{to{stroke-dashoffset:0}}
+@keyframes cinemaFlash{0%,41%{opacity:0}53%{opacity:.65}62%,100%{opacity:0}}
+@keyframes cinemaLabel{0%,25%{opacity:0;filter:blur(12px);transform:translate(-50%,-40%) scale(.8)}45%,64%{opacity:1;filter:blur(0);transform:translate(-50%,-50%) scale(1)}80%,100%{opacity:0;transform:translate(-50%,-55%) scale(1.1)}}
+/* Keep this transition enabled in the owner's demo even if reduced-motion is set. */
+@media(prefers-reduced-motion:reduce){.portal-cinema{display:block!important}}
+
+
+/* Red portal: camera pull, reverse push and chromatic shockwave. */
+.portal-cinema::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-conic-gradient(from 10deg at 50% 47%,transparent 0deg 15deg,rgba(255,20,57,.11) 17deg,transparent 20deg 37deg);mix-blend-mode:screen;animation:portalTurbulence 1.65s cubic-bezier(.2,.7,.1,1) both}
+@keyframes portalTurbulence{0%{opacity:0;transform:scale(.25) rotate(-65deg)}36%{opacity:.75;transform:scale(1.2) rotate(15deg)}75%{opacity:.55;transform:scale(2.3) rotate(105deg)}100%{opacity:0;transform:scale(3) rotate(155deg)}}
+body.portal-suction-enter #app,body.portal-suction-enter #hdr,body.portal-suction-enter #foot{animation:portalCameraIn .95s cubic-bezier(.35,.02,.7,1) both;transform-origin:50% 45%}
+body.portal-suction-exit #app,body.portal-suction-exit #hdr,body.portal-suction-exit #foot{animation:portalCameraOut .95s cubic-bezier(.3,.05,.8,1) both;transform-origin:50% 45%}
+@keyframes portalCameraIn{0%{transform:scale(1) rotate(0);filter:blur(0) hue-rotate(0);opacity:1}50%{transform:scale(.92) rotate(-2deg);filter:blur(1px) hue-rotate(-8deg);opacity:.95}100%{transform:scale(2.6) rotate(16deg);filter:blur(17px) hue-rotate(-35deg);opacity:0}}
+@keyframes portalCameraOut{0%{transform:scale(1.8) rotate(-13deg);filter:blur(15px);opacity:.2}60%{transform:scale(.94) rotate(1deg);filter:blur(2px);opacity:.9}100%{transform:scale(1) rotate(0);filter:blur(0);opacity:1}}
+@media(prefers-reduced-motion:reduce){body.portal-suction-enter #app,body.portal-suction-enter #hdr,body.portal-suction-enter #foot,body.portal-suction-exit #app,body.portal-suction-exit #hdr,body.portal-suction-exit #foot{animation:none}}
+
+/* Сдвиг горизонтальных полос во время входа и стабилизация страницы при появлении. */
+@media(prefers-reduced-motion:no-preference){
+  .portal-realm::before{animation:realmSignal 7s step-end infinite}
+  .portal-cinema__interference{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+  .portal-cinema__interference i{
+    position:absolute;inset-inline:-12%;top:var(--band-top);height:var(--band-height);
+    background:linear-gradient(90deg,#510219,#130207 38%,#971031 70%,#250712);
+    border-block:1px solid #ff547175;mix-blend-mode:screen;
+    animation:portalInterference .8s step-end var(--band-delay) both;
+  }
+  .portal-cinema.enter .portal-cinema__label{animation:cinemaLabel 1.65s ease both,portalTitleSplit .8s step-end .42s both}
+  .portal-world.portal-suction-enter .portal-space> *{animation:portalSettle .83s step-end .62s backwards}
+  .portal-world.portal-suction-enter .portal-card{animation-delay:.73s}
+}
+@keyframes realmSignal{
+  0%,100%{transform:none}
+  26%{transform:translate(-2.2%,1%) skewX(6deg)}
+  29%{transform:none}
+  72%{transform:translate(3%,-1%) skewX(-5deg)}
+  76%{transform:none}
+}
+@keyframes portalInterference{
+  0%,100%{opacity:0;transform:translateX(0)}
+  18%{opacity:.52;transform:translateX(-7%) skewX(6deg)}
+  39%{opacity:.24;transform:translateX(9%)}
+  68%{opacity:.35;transform:translateX(-3%)}
+}
+@keyframes portalTitleSplit{
+  0%,100%{text-shadow:0 0 28px #ff2448}
+  25%{text-shadow:-10px 1px #ed3153,8px -1px #65aab2}
+  59%{text-shadow:6px 0 #ed3153,-4px 0 #65aab2}
+}
+@keyframes portalSettle{
+  0%,100%{transform:none}
+  18%{transform:translateX(-9px) skewX(-3deg)}
+  39%{transform:translateX(5px) scaleX(1.02)}
+  64%{transform:translateX(-3px)}
+}
+
+/* Поиск и экран мобильного плеера */
+.catalog-trigger{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--mut)}
+.catalog-trigger:hover{background:rgba(255,255,255,.08);color:var(--ink)}
+@media(max-width:420px){#hdr{gap:4px;padding-inline:8px}.nav{gap:0}.nav a{padding-inline:6px}.back{flex:none;width:34px}.catalog-trigger{width:36px}}
+.music-dialog{
+  margin:auto;width:min(560px,calc(100% - 24px));max-height:calc(100dvh - 24px);
+  padding:20px;border:1px solid var(--line);border-radius:20px;overflow:auto;overscroll-behavior:contain;
+  background:#181322;color:var(--ink);box-shadow:0 24px 70px #0009;
+}
+.music-dialog::backdrop{background:#08060dc9}
+.music-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.music-dialog-head h2{font-size:18px}
+.music-close{width:44px;height:44px;border:1px solid var(--line);border-radius:50%;font-size:24px;line-height:1;flex:none}
+.music-close:hover{background:#ffffff15}
+#catalogInput{
+  width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;
+  background:#ffffff0b;color:inherit;font:inherit;
+}
+#catalogResults section{margin-top:16px}
+#catalogResults h3,.mobile-queue h3{font-size:14px;color:var(--mut);margin-bottom:4px}
+#catalogStatus{margin-top:12px;font-size:14px}
+.catalog-result,.mobile-queue button{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}
+.catalog-result a,.mobile-queue button{min-width:0;flex:1;padding:9px 6px;overflow-wrap:anywhere}
+.catalog-result a:hover,.mobile-queue button:hover,.mobile-queue button[aria-current="true"]{color:var(--acc)}
+.catalog-result small{display:block;color:var(--mut)}
+.catalog-result button{display:grid;place-items:center;width:44px;height:44px;flex:none;border-radius:50%;color:var(--acc)}
+.catalog-result button:hover{background:#ffffff15}
+.mobile-player-trigger{display:none}
+@media(max-width:700px){#dCover{display:none}.mobile-player-trigger{display:block}}
+.mobile-player-art{
+  width:min(100%,230px,35dvh);aspect-ratio:1;margin:0 auto 14px;border-radius:14px;
+  background-size:cover;background-position:center;
+}
+.mobile-player-info{text-align:center;overflow-wrap:anywhere}
+.mobile-player-info a{font-weight:700}
+.mobile-player-progress{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:13px;font-variant-numeric:tabular-nums}
+.mobile-player-progress input{flex:1;min-width:0;height:32px;accent-color:var(--acc)}
+.mobile-player-controls{justify-content:center;gap:12px;margin:8px 0 18px}
+.mobile-player-controls button{width:44px;height:44px}
+.mobile-player-controls button:disabled{opacity:.35;cursor:default}
+.mobile-queue ol{padding:0;list-style:none}
+.mobile-queue button{width:100%;text-align:left}
+</style>
+</head>
+<body>
+<div id="amb"></div>
+<header id="hdr">
+  <button class="back" id="back" aria-label="Назад" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+  <a class="brand" href="#/" id="brand"></a>
+  <nav class="nav" id="nav"></nav>
+  <button class="catalog-trigger" id="catalogOpen" type="button" aria-label="Поиск по каталогу" aria-haspopup="dialog">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5" stroke-linecap="round"/></svg>
+  </button>
+</header>
+<main id="app"></main>
+<footer id="foot"></footer>
+
+<div class="dock" id="dock" aria-label="Плеер">
+  <a class="d-cover" id="dCover" href="#/"></a>
+  <button class="d-cover mobile-player-trigger" id="mobilePlayerOpen" type="button" aria-label="Открыть экран «Сейчас играет»" aria-haspopup="dialog"></button>
+  <div class="d-info"><a class="d-title" id="dTitle" href="#/"></a><span class="d-who" id="dWho"></span></div>
+  <div class="d-ctl">
+    <button id="dPrev" aria-label="Предыдущий"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+    <button class="d-play" id="dPlay" aria-label="Играть / пауза">
+      <svg class="ic-play" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      <svg class="ic-pause" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+    </button>
+    <button id="dNext" aria-label="Следующий"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
+  </div>
+  <div class="d-prog"><span id="dCur">0:00</span><div class="bar" id="dBar"><i id="dFill"></i></div><span id="dTot">0:00</span></div>
+  <div class="d-volume" aria-label="Громкость воспроизведения">
+    <button id="dMute" type="button" aria-label="Выключить звук" title="Включить / выключить звук">
+      <svg class="vol-icon" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path class="vol-waves" d="M15 9a5 5 0 0 1 0 6M18 6a9 9 0 0 1 0 12"/><path class="vol-cross" d="m16 9 5 6m0-6-5 6" style="display:none"/></svg>
+    </button>
+    <input id="dVolume" type="range" min="0" max="100" step="1" value="80" aria-label="Уровень громкости" title="Громкость: 80%">
+  </div>
+</div>
+
+<dialog class="music-dialog" id="catalogDialog" aria-labelledby="catalogHeading">
+  <div class="music-dialog-head">
+    <h2 id="catalogHeading">Поиск по каталогу</h2>
+    <form method="dialog"><button class="music-close" aria-label="Закрыть поиск">×</button></form>
+  </div>
+  <input id="catalogInput" type="search" placeholder="Артист, релиз или трек" aria-label="Артист, релиз или трек" autofocus>
+  <p class="mut" id="catalogStatus" role="status">Введите название или имя артиста.</p>
+  <div id="catalogResults"></div>
+</dialog>
+
+<dialog class="music-dialog" id="mobilePlayer" aria-labelledby="mobilePlayerHeading">
+  <div class="music-dialog-head">
+    <h2 id="mobilePlayerHeading">Сейчас играет</h2>
+    <form method="dialog"><button class="music-close" aria-label="Свернуть плеер" autofocus>×</button></form>
+  </div>
+  <div class="mobile-player-art" id="mobilePlayerArt" aria-hidden="true"></div>
+  <div class="mobile-player-info"><a id="mobilePlayerTitle" href="#/"></a><div class="mut" id="mobilePlayerWho"></div></div>
+  <div class="mobile-player-progress">
+    <span id="mobileCurrent">0:00</span>
+    <input id="mobileSeek" type="range" min="0" max="1000" value="0" aria-label="Позиция воспроизведения" disabled>
+    <span id="mobileDuration">0:00</span>
+  </div>
+  <div class="d-ctl mobile-player-controls">
+    <button id="mobilePrev" type="button" aria-label="Предыдущий трек"></button>
+    <button class="d-play" id="mobilePlay" type="button" aria-label="Воспроизвести"></button>
+    <button id="mobileNext" type="button" aria-label="Следующий трек"></button>
+  </div>
+  <section class="mobile-queue"><h3>Очередь релиза</h3><ol id="mobileQueue"></ol></section>
+</dialog>
+
+<script src="lyrics.js"></script>
+<script src="Links.js"></script>
+<script>
+/* =====================================================================
+   ДАННЫЕ — здесь меняешь контент. Всё остальное трогать не нужно.
+   У артистов: tagline — короткая строка на главной, bio — описание на странице артиста,
+   accent — цвет артиста, photo — путь к фото. Пустые tagline/bio на сайте не показываются.
+   audio: ссылка на mp3 (например "audio/lija-track1.mp3"), "" = пока нет
+   official:false → попадает во вкладку «Неофициальное»
+   ===================================================================== */
+const ARTISTS = {
+  lija:   {name:"LIJA", accent:"#9d7bff", photo:"images/artist-lija.jpg",    role:"Артист",     tagline:"", bio:"", hue:280, tabs:["music","unofficial"]},
+  aki:    {name:"Aki!", accent:"#35d6c0", photo:"images/artist-aki.webp",    role:"Артист",     tagline:"", bio:"", hue:170, tabs:["music","unofficial"]},
+  someone:{name:"Someone", accent:"#ff8a3d", photo:"images/artist-someone.jpg", role:"Продюсер",   tagline:"", bio:"", hue:30,  tabs:["music","beats"]}
+};
+
+// type: album | ep | single
+const RELEASES = [
+  {id:"lija-1", artist:"lija", with:["someone"], title:"Последнее лето", type:"album", date:"2024-10-28", cover:"images/01-poslednee-leto.webp", count:8, highlight:false, official:true},
+  {id:"lija-9", artist:"lija", with:["someone"], title:"LAZER VOVA 2", type:"single", date:"2024-11-29", cover:"images/02-lazer-vova-2.webp", count:1, highlight:false, official:true},
+  {id:"lija-2", artist:"lija", with:["someone"], title:"NEW WAY 2", type:"album", date:"2025-01-06", cover:"images/03-new-way-2.webp", count:7, highlight:false, official:true},
+  {id:"lija-11", artist:"lija", with:["someone"], title:"Не вернусь", type:"single", date:"2025-03-15", cover:"images/04-ne-vernus.webp", count:1, highlight:false, official:true},
+  {id:"lija-12", artist:"lija", title:"Помощь ангелов", type:"single", date:"2025-05-06", cover:"images/05-pomosh-angelov.jpg", count:1, highlight:false, official:false},
+  {id:"lija-3", artist:"lija", with:["aki"], title:"4 U", type:"ep", date:"2025-07-03", cover:"images/06-4u.webp", count:4, highlight:false, official:true},
+  {id:"lija-14", artist:"lija", title:"Реально Последнее Лето", type:"single", date:"2025-07-18", cover:"images/07-realno-poslednee-leto.jpg", count:1, highlight:false, official:false},
+  {id:"lija-4", artist:"lija", title:"КОДЕКС", type:"album", date:"2025-07-25", cover:"images/08-kodeks.jpg", count:11, highlight:false, official:false},
+  {id:"lija-16", artist:"lija", with:["someone"], title:"Порой Другой Белый Хочет", type:"single", date:"2025-08-01", cover:"images/09-belyi-hochet.webp", count:1, highlight:false, official:true},
+  {id:"lija-17", artist:"lija", with:["someone"], title:"Головокружение", type:"single", date:"2025-08-22", cover:"images/10-golovokruzenie.webp", count:1, highlight:false, official:true},
+  {id:"lija-18", artist:"lija", with:["someone"], title:"Бублик", type:"single", date:"2025-08-29", cover:"images/11-bublik.webp", count:1, highlight:true, official:true},
+  {id:"lija-5", artist:"lija", with:["someone"], title:"MUSIC IS ME, Pt. 2", type:"album", date:"2025-10-06", cover:"images/12-music-is-me-pt2.webp", count:10, highlight:false, official:true},
+  {id:"lija-6", artist:"lija", with:["someone"], title:"NW 4", type:"ep", date:"2025-11-05", cover:"images/13-nw-4.webp", count:1, highlight:false, official:true},
+  {id:"lija-21", artist:"lija", title:"Jump", type:"single", date:"2025-11-10", cover:"images/14-jump.jpg", count:1, highlight:false, official:false},
+  {id:"lija-22", artist:"lija", title:"Хочу", type:"single", date:"2025-12-01", cover:"images/15-hochu.jpg", count:1, highlight:false, official:false},
+  {id:"lija-7", artist:"lija", title:"LIJA", type:"album", date:"2026-01-16", cover:"images/16-lija.webp", count:14, highlight:false, official:true},
+  {id:"lija-24", artist:"lija", with:["aki"], title:"More (Remix)", type:"single", date:"2026-02-27", cover:"images/17-more-remix.webp", count:1, highlight:false, official:true},
+  {id:"lija-8", artist:"lija", with:["someone"], title:"BM26 (Last One)", type:"album", date:"2026-03-25", cover:"images/18-bm26.webp", count:19, highlight:false, official:true},
+  {id:"lija-26", artist:"lija", title:"Ненавижу зиму", type:"single", date:"2026-05-01", cover:"images/19-nenavizhu-zimu.webp", count:1, highlight:true, official:true},
+  {id:"lija-9b", artist:"lija", title:"Эхо в пустой комнате", type:"album", date:"2026-05-08", cover:"images/20-eho.webp", count:6, highlight:false, official:true},
+  {id:"lija-28", artist:"lija", with:["someone"], title:"Космос", type:"single", date:"2026-05-29", cover:"images/21-kosmos.webp", count:1, highlight:false, official:true},
+  {id:"lija-11b", artist:"lija", with:["someone"], title:"Lukoil", type:"album", date:"2026-10-02", cover:"images/lukoil.webp", count:5, highlight:false, official:true},
+  {id:"lija-nikotin", artist:"lija", with:["aki","someone"], title:"Никотиновая Любовь", type:"single", date:"2026-09-25", cover:"images/nikotinovaya-lyubov.webp", count:1, highlight:false, official:true},
+  {id:"lija-princes", artist:"lija", with:["someone"], title:"Принцы ради денег", type:"single", date:"2026-10-16", cover:"images/printsy-radi-deneg.webp", count:1, highlight:false, official:true},
+  {id:"aki-vyhod", artist:"aki", with:["someone"], title:"Выход...", type:"single", date:"2026-10-09", cover:"images/vyhod.webp", count:1, highlight:false, official:true},
+  {id:"lija-wings", artist:"lija", with:["someone"], title:"Wings", type:"single", date:"2026-11-27", cover:"images/wings.jpg", count:1, highlight:false, official:true},
+  {id:"lija-llb-gang", artist:"lija", with:["someone"], title:"LLB GANG", type:"single", date:"2026-11-27", cover:"images/llb-gang.jpg", count:1, highlight:false, official:true},
+  {id:"aki-dm", artist:"aki", title:"DIFFERENT MOODS", type:"ep", date:"2026-11-19", cover:"images/aki-different-moods.jpg", count:3, highlight:false, official:false},
+  {id:"aki-myaso", artist:"aki", producer:"someone", title:"MЯSO", type:"single", date:"2026-11-22", cover:"images/aki-myaso.jpg", count:1, highlight:false, official:false},
+  {id:"lija-bm252", artist:"lija", title:"BM25-2", type:"album", date:"2025-12-11", cover:"images/bm25-2.jpg", count:15, highlight:false, official:false},
+  {id:"lija-frgp", artist:"lija", title:"F*ck Rap, Go Pop (FRGP)", type:"album", date:"2026-02-05", cover:"images/frgp.jpg", count:7, highlight:false, official:false},
+  {id:"lija-mixlija1", artist:"lija", title:"MIXLIJA Pt.1", type:"album", date:"2026-04-30", cover:"images/mixlija-pt1.jpg", count:6, highlight:false, official:false},
+  {id:"lija-opposite", artist:"lija", title:"The Opposite of Alone", type:"album", date:"2026-08-28", cover:"images/opposite-of-alone.jpg", count:10, highlight:false, official:false},
+  {id:"lija-bm262", artist:"lija", title:"BM26-2", type:"album", date:"2026-10-30", cover:"images/bm26-2.jpg", count:14, highlight:false, official:false},
+];
+
+// feat: массив id других артистов (необязательно)
+const TRACKS = [
+  {id:"auto-lija-wings", release:"lija-wings", n:1, title:"Wings", dur:"2:46", audio:"", lyrics:""},
+  {id:"auto-lija-llb-gang", release:"lija-llb-gang", n:1, title:"LLB GANG", dur:"1:36", audio:"", lyrics:""},
+  {id:"aki-dm-01", release:"aki-dm", n:1, title:"ministrerstwo dripchik", dur:"", audio:"", lyrics:""},
+  {id:"aki-dm-02", release:"aki-dm", n:2, title:"prime", dur:"", audio:"", lyrics:""},
+  {id:"aki-dm-03", release:"aki-dm", n:3, title:"pozitive vibe", dur:"", audio:"", lyrics:""},
+  {id:"aki-myaso-01", release:"aki-myaso", n:1, title:"MЯSO", dur:"1:55", audio:"", lyrics:""},
+  {id:"lija-frgp-01", release:"lija-frgp", n:1, title:"FRGP INTRO", dur:"1:50", audio:"", lyrics:""},
+  {id:"lija-frgp-02", release:"lija-frgp", n:2, title:"Забей", dur:"3:06", audio:"", lyrics:""},
+  {id:"lija-frgp-03", release:"lija-frgp", n:3, title:"Наказать (Ft. unique, Wipo & nkeeel)", dur:"2:11", audio:"", lyrics:""},
+  {id:"lija-frgp-04", release:"lija-frgp", n:4, title:"Звезда", dur:"3:02", audio:"", lyrics:""},
+  {id:"lija-frgp-05", release:"lija-frgp", n:5, title:"Качать (Ft. ARTEM SHILOVETS)", dur:"2:05", audio:"", lyrics:""},
+  {id:"lija-frgp-06", release:"lija-frgp", n:6, title:"Пошлю На******", dur:"2:35", audio:"", lyrics:""},
+  {id:"lija-frgp-07", release:"lija-frgp", n:7, title:"FRGP OUTRO", dur:"1:51", audio:"", lyrics:""},
+  {id:"lija-mixlija1-01", release:"lija-mixlija1", n:1, title:"Интро (Ft. OG Buda)", dur:"2:38", audio:"", lyrics:""},
+  {id:"lija-mixlija1-02", release:"lija-mixlija1", n:2, title:"Буду гнить", dur:"2:10", audio:"", lyrics:""},
+  {id:"lija-mixlija1-03", release:"lija-mixlija1", n:3, title:"Козлы (Ft. 163ONMYNECK, ASKET, MATXX, ...)", dur:"1:58", audio:"", lyrics:""},
+  {id:"lija-mixlija1-04", release:"lija-mixlija1", n:4, title:"Школа не нужна (Ft. uglystephan)", dur:"2:04", audio:"", lyrics:""},
+  {id:"lija-mixlija1-05", release:"lija-mixlija1", n:5, title:"Yeat", dur:"2:03", audio:"", lyrics:""},
+  {id:"lija-mixlija1-06", release:"lija-mixlija1", n:6, title:"Кутью (Ft. Baby Melo)", dur:"1:29", audio:"", lyrics:""},
+  {id:"lija-opposite-01", release:"lija-opposite", n:1, title:"Фоновый шум", dur:"0:08", audio:"", lyrics:""},
+  {id:"lija-opposite-02", release:"lija-opposite", n:2, title:"С утра не встать", dur:"2:16", audio:"", lyrics:""},
+  {id:"lija-opposite-03", release:"lija-opposite", n:3, title:"Я хотел подохнуть", dur:"1:51", audio:"", lyrics:""},
+  {id:"lija-opposite-04", release:"lija-opposite", n:4, title:"Спасательный круг (который топит)", dur:"2:28", audio:"", lyrics:""},
+  {id:"lija-opposite-05", release:"lija-opposite", n:5, title:"Скорою Не вызывай", dur:"2:49", audio:"", lyrics:""},
+  {id:"lija-opposite-06", release:"lija-opposite", n:6, title:"Никого", dur:"2:35", audio:"", lyrics:""},
+  {id:"lija-opposite-07", release:"lija-opposite", n:7, title:"Дно (инструментал)", dur:"0:35", audio:"", lyrics:""},
+  {id:"lija-opposite-08", release:"lija-opposite", n:8, title:"Зачем я жив", dur:"2:11", audio:"", lyrics:""},
+  {id:"lija-opposite-09", release:"lija-opposite", n:9, title:"Минус пять человек", dur:"2:16", audio:"", lyrics:""},
+  {id:"lija-opposite-10", release:"lija-opposite", n:10, title:"Свет в коридоре", dur:"2:46", audio:"", lyrics:""},
+  {id:"lija-bm262-01", release:"lija-bm262", n:1, title:"INTRO: Чёрный экран", dur:"1:25", audio:"", lyrics:""},
+  {id:"lija-bm262-02", release:"lija-bm262", n:2, title:"Грязный GLOW", dur:"2:21", audio:"", lyrics:""},
+  {id:"lija-bm262-03", release:"lija-bm262", n:3, title:"Нервы в zip-пакет", dur:"1:18", audio:"", lyrics:""},
+  {id:"lija-bm262-04", release:"lija-bm262", n:4, title:"GEEKED", dur:"2:16", audio:"", lyrics:""},
+  {id:"lija-bm262-05", release:"lija-bm262", n:5, title:"Наркота", dur:"2:39", audio:"", lyrics:""},
+  {id:"lija-bm262-06", release:"lija-bm262", n:6, title:"Wassup (Ft. AKI!)", dur:"2:07", feat:["aki"], audio:"", lyrics:""},
+  {id:"lija-bm262-07", release:"lija-bm262", n:7, title:"crash test", dur:"3:17", audio:"", lyrics:""},
+  {id:"lija-bm262-08", release:"lija-bm262", n:8, title:"Молодой ублюдок", dur:"2:37", audio:"", lyrics:""},
+  {id:"lija-bm262-09", release:"lija-bm262", n:9, title:"Трафик ночью", dur:"3:25", audio:"", lyrics:""},
+  {id:"lija-bm262-10", release:"lija-bm262", n:10, title:"Ритуал", dur:"1:46", audio:"", lyrics:""},
+  {id:"lija-bm262-11", release:"lija-bm262", n:11, title:"26.03", dur:"3:31", audio:"", lyrics:""},
+  {id:"lija-bm262-12", release:"lija-bm262", n:12, title:"ПАРАНОЯ.EXE", dur:"1:43", audio:"", lyrics:""},
+  {id:"lija-bm262-13", release:"lija-bm262", n:13, title:"Завершение (LUST ALBUM)", dur:"1:25", audio:"", lyrics:""},
+  {id:"lija-bm262-14", release:"lija-bm262", n:14, title:"NEW ERA SOON", dur:"0:11", audio:"", lyrics:""},
+  {id:"lija-bm252-01", release:"lija-bm252", n:1, title:"Предупреждение", dur:"1:13", audio:"", lyrics:""},
+  {id:"lija-bm252-02", release:"lija-bm252", n:2, title:"ОТКРЫТИЕ 2 СУКАААААААА (Ft.OG BUDA)", dur:"3:30", audio:"", lyrics:""},
+  {id:"lija-bm252-03", release:"lija-bm252", n:3, title:"Freestyle ;)", dur:"3:13", audio:"", lyrics:""},
+  {id:"lija-bm252-04", release:"lija-bm252", n:4, title:"Закадрила (Ft.uniqe, nkeeei, ARTEM SHILOVETS)", dur:"2:50", audio:"", lyrics:""},
+  {id:"lija-bm252-05", release:"lija-bm252", n:5, title:"Jump", dur:"1:15", audio:"", lyrics:""},
+  {id:"lija-bm252-06", release:"lija-bm252", n:6, title:"Забирайте Бабки (Ft.ActOr1)", dur:"2:04", feat:["aki"], audio:"", lyrics:""},
+  {id:"lija-bm252-07", release:"lija-bm252", n:7, title:"Одинок(freestyle)", dur:"1:43", audio:"", lyrics:""},
+  {id:"lija-bm252-08", release:"lija-bm252", n:8, title:"Укулеле(Ft.MAYOT)", dur:"1:33", audio:"", lyrics:""},
+  {id:"lija-bm252-09", release:"lija-bm252", n:9, title:"Кто простит меня (Ft.PHARAOH)", dur:"2:35", audio:"", lyrics:""},
+  {id:"lija-bm252-10", release:"lija-bm252", n:10, title:"Плохой человек", dur:"2:52", audio:"", lyrics:""},
+  {id:"lija-bm252-11", release:"lija-bm252", n:11, title:"Хочу", dur:"1:56", audio:"", lyrics:""},
+  {id:"lija-bm252-12", release:"lija-bm252", n:12, title:"Умереть 2);", dur:"2:39", audio:"", lyrics:""},
+  {id:"lija-bm252-13", release:"lija-bm252", n:13, title:"Разрушительно(Ft.Неисправность)", dur:"3:16", audio:"", lyrics:""},
+  {id:"lija-bm252-14", release:"lija-bm252", n:14, title:"Негативное Мышление (Ft.Три Дня Дождя)", dur:"3:54", audio:"", lyrics:""},
+  {id:"lija-bm252-15", release:"lija-bm252", n:15, title:"Завершение", dur:"1:51", audio:"", lyrics:""},
+  {id:"lija-1-01", release:"lija-1", n:1, title:"на память", dur:"1:18", audio:"", lyrics:""},
+  {id:"lija-1-02", release:"lija-1", n:2, title:"новая жизнь", dur:"1:24", audio:"", lyrics:""},
+  {id:"lija-1-03", release:"lija-1", n:3, title:"прогулка", dur:"1:37", audio:"", lyrics:""},
+  {id:"lija-1-04", release:"lija-1", n:4, title:"та самая", dur:"1:56", audio:"", lyrics:""},
+  {id:"lija-1-05", release:"lija-1", n:5, title:"ночная прогулка", dur:"1:55", audio:"", lyrics:""},
+  {id:"lija-1-06", release:"lija-1", n:6, title:"алкоголь", dur:"1:57", audio:"", lyrics:""},
+  {id:"lija-1-07", release:"lija-1", n:7, title:"потерял себя", dur:"1:53", audio:"", lyrics:""},
+  {id:"lija-1-08", release:"lija-1", n:8, title:"слезы", dur:"2:09", audio:"", lyrics:""},
+  {id:"lija-2-01", release:"lija-2", n:1, title:"NEW WAY 2", dur:"2:24", audio:"", lyrics:""},
+  {id:"lija-2-02", release:"lija-2", n:2, title:"Я Е%\"Л РЭПЕРОВ", dur:"1:29", audio:"", lyrics:""},
+  {id:"lija-2-03", release:"lija-2", n:3, title:"высоко(ft.vladislavdbelya)", dur:"1:54", audio:"", lyrics:""},
+  {id:"lija-2-04", release:"lija-2", n:4, title:"LAZER VOVA 2", dur:"1:24", audio:"", lyrics:""},
+  {id:"lija-2-05", release:"lija-2", n:5, title:"сладкий дым(ft.Act0r1)", dur:"2:13", feat:["aki"], audio:"", lyrics:""},
+  {id:"lija-2-06", release:"lija-2", n:6, title:"приносят 2", dur:"2:36", audio:"", lyrics:""},
+  {id:"lija-2-07", release:"lija-2", n:7, title:"курю так много(outro)", dur:"1:24", audio:"", lyrics:""},
+  {id:"lija-3-01", release:"lija-3", n:1, title:"Пиздец", dur:"2:40", audio:"", lyrics:""},
+  {id:"lija-3-02", release:"lija-3", n:2, title:"Больше", dur:"2:14", audio:"", lyrics:""},
+  {id:"lija-3-03", release:"lija-3", n:3, title:"Амбиция", dur:"2:07", audio:"", lyrics:""},
+  {id:"lija-3-04", release:"lija-3", n:4, title:"Будущие (для тебя)", dur:"2:09", audio:"", lyrics:""},
+  {id:"lija-4-01", release:"lija-4", n:1, title:"Заповедь №0", dur:"1:09", audio:"", lyrics:""},
+  {id:"lija-4-02", release:"lija-4", n:2, title:"Баланс", dur:"2:04", audio:"", lyrics:""},
+  {id:"lija-4-03", release:"lija-4", n:3, title:"Не Гнись", dur:"2:08", audio:"", lyrics:""},
+  {id:"lija-4-04", release:"lija-4", n:4, title:"СКОЛЬКО СТОИТ МОЛЧАНИЕ?", dur:"2:03", audio:"", lyrics:""},
+  {id:"lija-4-05", release:"lija-4", n:5, title:"Круги На Воде", dur:"2:19", audio:"", lyrics:""},
+  {id:"lija-4-06", release:"lija-4", n:6, title:"Чёрное Зеркало", dur:"2:43", audio:"", lyrics:""},
+  {id:"lija-4-07", release:"lija-4", n:7, title:"Без Сожалений", dur:"2:28", audio:"", lyrics:""},
+  {id:"lija-4-08", release:"lija-4", n:8, title:"Тени прошлого", dur:"2:47", audio:"", lyrics:""},
+  {id:"lija-4-09", release:"lija-4", n:9, title:"Код Доступа", dur:"2:34", audio:"", lyrics:""},
+  {id:"lija-4-10", release:"lija-4", n:10, title:"Последний урок", dur:"4:26", audio:"", lyrics:""},
+  {id:"lija-4-11", release:"lija-4", n:11, title:"«Кодекс»", dur:"0:43", audio:"", lyrics:""},
+  {id:"lija-5-01", release:"lija-5", n:1, title:"ИНТРО", dur:"2:15", audio:"", lyrics:""},
+  {id:"lija-5-02", release:"lija-5", n:2, title:"Чего добился", dur:"2:25", audio:"", lyrics:""},
+  {id:"lija-5-03", release:"lija-5", n:3, title:"Бублик", dur:"1:51", audio:"", lyrics:""},
+  {id:"lija-5-04", release:"lija-5", n:4, title:"В Поисках Клада", dur:"1:57", audio:"", lyrics:""},
+  {id:"lija-5-05", release:"lija-5", n:5, title:"Фейм. Телки и пачки", dur:"2:48", audio:"", lyrics:""},
+  {id:"lija-5-06", release:"lija-5", n:6, title:"Утро", dur:"2:15", audio:"", lyrics:""},
+  {id:"lija-5-07", release:"lija-5", n:7, title:"Каждый день", dur:"2:25", audio:"", lyrics:""},
+  {id:"lija-5-08", release:"lija-5", n:8, title:"Говорят", dur:"2:50", audio:"", lyrics:""},
+  {id:"lija-5-09", release:"lija-5", n:9, title:"Головокружение", dur:"2:19", audio:"", lyrics:""},
+  {id:"lija-5-10", release:"lija-5", n:10, title:"Даже Когда Ум…", dur:"2:08", audio:"", lyrics:""},
+  {id:"lija-6-01", release:"lija-6", n:1, title:"NEW WAY 4 (HEAVY METAL 3)", dur:"1:06", audio:"", lyrics:""},
+  {id:"lija-7-01", release:"lija-7", n:1, title:"[SKIT] - L (LIGHT)", dur:"0:25", audio:"", lyrics:""},
+  {id:"lija-7-02", release:"lija-7", n:2, title:"Лицо в стекле", dur:"1:09", audio:"", lyrics:""},
+  {id:"lija-7-03", release:"lija-7", n:3, title:"Искры (FIRE)", dur:"2:07", audio:"", lyrics:""},
+  {id:"lija-7-04", release:"lija-7", n:4, title:"[SKIT] - I (IDENTITY)", dur:"0:39", audio:"", lyrics:""},
+  {id:"lija-7-05", release:"lija-7", n:5, title:"Белый шум", dur:"2:51", audio:"", lyrics:""},
+  {id:"lija-7-06", release:"lija-7", n:6, title:"J-прилив (J-Tide)", dur:"1:19", audio:"", lyrics:""},
+  {id:"lija-7-07", release:"lija-7", n:7, title:"[SKIT] - J (JOURNEY)", dur:"0:21", audio:"", lyrics:""},
+  {id:"lija-7-08", release:"lija-7", n:8, title:"Опять не правда", dur:"3:20", audio:"", lyrics:""},
+  {id:"lija-7-09", release:"lija-7", n:9, title:"Атомы", dur:"2:12", audio:"", lyrics:""},
+  {id:"lija-7-10", release:"lija-7", n:10, title:"[SKIT] - A (ACCEPTANCE)", dur:"0:34", audio:"", lyrics:""},
+  {id:"lija-7-11", release:"lija-7", n:11, title:"Игра Теней", dur:"3:42", audio:"", lyrics:""},
+  {id:"lija-7-12", release:"lija-7", n:12, title:"[SKIT] - FIN", dur:"0:21", audio:"", lyrics:""},
+  {id:"lija-7-13", release:"lija-7", n:13, title:"Дом (Ft.Три Дня Дождя) (Bonus)", dur:"3:58", audio:"", lyrics:""},
+  {id:"lija-7-14", release:"lija-7", n:14, title:"Тоже мечтаю (Ft. OG BUDA) (Bonus)", dur:"3:17", audio:"", lyrics:""},
+  {id:"lija-8-01", release:"lija-8", n:1, title:"Я хочу поговорить (skit)", dur:"0:45", audio:"", lyrics:""},
+  {id:"lija-8-02", release:"lija-8", n:2, title:"BM26 INTRO", dur:"1:38", audio:"", lyrics:""},
+  {id:"lija-8-03", release:"lija-8", n:3, title:"Дедройт сука", dur:"1:59", audio:"", lyrics:""},
+  {id:"lija-8-04", release:"lija-8", n:4, title:"перекур 1 (skit)", dur:"1:00", audio:"", lyrics:""},
+  {id:"lija-8-05", release:"lija-8", n:5, title:"Бля нахуй ****", dur:"1:56", audio:"", lyrics:""},
+  {id:"lija-8-06", release:"lija-8", n:6, title:"More (Remix)(Ft.ActOr1) [Bonus]", dur:"2:14", feat:["aki"], audio:"", lyrics:""},
+  {id:"lija-8-07", release:"lija-8", n:7, title:"donor (Ft.Baby Cute) [Bonus]", dur:"1:26", audio:"", lyrics:""},
+  {id:"lija-8-08", release:"lija-8", n:8, title:"Не адекват", dur:"2:10", audio:"", lyrics:""},
+  {id:"lija-8-09", release:"lija-8", n:9, title:"перекур 2 (skit)", dur:"0:32", audio:"", lyrics:""},
+  {id:"lija-8-10", release:"lija-8", n:10, title:"Сплетни (Ft.Conflict)", dur:"1:58", audio:"", lyrics:""},
+  {id:"lija-8-11", release:"lija-8", n:11, title:"Потеря смысла [Bonus]", dur:"1:35", audio:"", lyrics:""},
+  {id:"lija-8-12", release:"lija-8", n:12, title:"Важно (skit)", dur:"0:37", audio:"", lyrics:""},
+  {id:"lija-8-13", release:"lija-8", n:13, title:"любит нарк* [Bonus]", dur:"2:27", audio:"", lyrics:""},
+  {id:"lija-8-14", release:"lija-8", n:14, title:"NEW YEAT", dur:"2:20", audio:"", lyrics:""},
+  {id:"lija-8-15", release:"lija-8", n:15, title:"перекур 3 (skit)", dur:"0:32", audio:"", lyrics:""},
+  {id:"lija-8-16", release:"lija-8", n:16, title:"Заебали", dur:"2:06", audio:"", lyrics:""},
+  {id:"lija-8-17", release:"lija-8", n:17, title:"Я не хотел бы чтобы у меня был такой трек 2", dur:"2:05", audio:"", lyrics:""},
+  {id:"lija-8-18", release:"lija-8", n:18, title:"Последний трек", dur:"2:00", audio:"", lyrics:""},
+  {id:"lija-8-19", release:"lija-8", n:19, title:"BM26 OUTRO (skit)", dur:"0:58", audio:"", lyrics:""},
+  {id:"lija-11b-01", release:"lija-11b", n:1, title:"Улетаю", dur:"2:20", audio:"", lyrics:""},
+  {id:"lija-11b-02", release:"lija-11b", n:2, title:"Меняют", dur:"2:20", audio:"", lyrics:""},
+  {id:"lija-11b-03", release:"lija-11b", n:3, title:"Космос", dur:"2:11", audio:"", lyrics:""},
+  {id:"lija-11b-04", release:"lija-11b", n:4, title:"5 в 1", dur:"4:19", audio:"", lyrics:""},
+  {id:"lija-11b-05", release:"lija-11b", n:5, title:"Вряд ли идеальный друг", dur:"2:40", audio:"", lyrics:""},
+  {id:"lija-9b-01", release:"lija-9b", n:1, title:"ERROR", dur:"3:02", audio:"", lyrics:""},
+  {id:"lija-9b-02", release:"lija-9b", n:2, title:"Привычки", dur:"2:37", audio:"", lyrics:""},
+  {id:"lija-9b-03", release:"lija-9b", n:3, title:"Ненавижу зиму", dur:"2:51", audio:"", lyrics:""},
+  {id:"lija-9b-04", release:"lija-9b", n:4, title:"Узоры Жизни", dur:"2:25", audio:"", lyrics:""},
+  {id:"lija-9b-05", release:"lija-9b", n:5, title:"Комета (Ft.Неисправность) [BONUS]", dur:"2:45", audio:"", lyrics:""},
+  {id:"lija-9b-06", release:"lija-9b", n:6, title:"Не поможет (Ft.Неисправность) [BONUS]", dur:"2:16", audio:"", lyrics:""},
+];
+
+// Для синглов трек создаётся автоматически (название = названию сингла).
+// Чтобы добавить аудио/текст — добавь в TRACKS запись с тем же release.
+// Синглы, которые потом вошли в альбом: id релиза-сингла → id трека в альбоме.
+// У такого сингла остаётся своя обложка, но текст/аудио берутся из трека альбома.
+const SINGLE_OF = {
+  "lija-9":"lija-2-04",    // LAZER VOVA 2 → NEW WAY 2
+  "lija-18":"lija-5-03",   // Бублик → MUSIC IS ME Pt. 2
+  "lija-17":"lija-5-09",   // Головокружение → MUSIC IS ME Pt. 2
+  "lija-24":"lija-8-06",   // More (Remix) → BM26
+  "lija-26":"lija-9b-03",  // Ненавижу зиму → Эхо в пустой комнате
+  "lija-28":"lija-11b-03", // Космос → Lukoil
+  "lija-21":"lija-bm252-05", // Jump → BM25-2
+  "lija-22":"lija-bm252-11"  // Хочу → BM25-2
+};
+RELEASES.forEach(r=>{ if(r.type==="single" && !TRACKS.some(t=>t.release===r.id))
+  TRACKS.push({id:"auto-"+r.id, release:r.id, n:1, title:r.title, dur:"", audio:"", lyrics:"", same:SINGLE_OF[r.id]}); });
+
+// Подключённые MP3 из архива «все треки.zip»: 71 файл. Обложки не изменены.
+const AUDIO_FILES = {
+  "auto-lija-wings": "audio/wings.mp3",
+  "auto-lija-llb-gang": "audio/llb-gang.mp3",
+  "lija-7-12": "audio/01.mp3",
+  "lija-7-10": "audio/02.mp3",
+  "lija-7-04": "audio/03.mp3",
+  "lija-7-07": "audio/04.mp3",
+  "lija-7-06": "audio/05.mp3",
+  "lija-7-01": "audio/06.mp3",
+  "lija-2-04": "audio/07.mp3",
+  "lija-2-01": "audio/08.mp3",
+  "lija-6-01": "audio/09.mp3",
+  "lija-1-06": "audio/10.mp3",
+  "lija-7-09": "audio/11.mp3",
+  "lija-7-05": "audio/12.mp3",
+  "lija-5-03": "audio/13.mp3",
+  "lija-5-04": "audio/14.mp3",
+  "lija-5-08": "audio/15.mp3",
+  "lija-5-09": "audio/16.mp3",
+  "lija-5-10": "audio/17.mp3",
+  "lija-7-11": "audio/18.mp3",
+  "lija-5-01": "audio/19.mp3",
+  "lija-7-03": "audio/20.mp3",
+  "lija-5-07": "audio/21.mp3",
+  "lija-2-07": "audio/22.mp3",
+  "lija-7-02": "audio/23.mp3",
+  "lija-1-01": "audio/24.mp3",
+  "auto-lija-11": "audio/25.mp3",
+  "lija-1-02": "audio/26.mp3",
+  "lija-1-05": "audio/27.mp3",
+  "lija-7-08": "audio/28.mp3",
+  "auto-lija-16": "audio/29.mp3",
+  "lija-1-07": "audio/30.mp3",
+  "lija-2-06": "audio/31.mp3",
+  "lija-1-03": "audio/32.mp3",
+  "lija-1-08": "audio/33.mp3",
+  "lija-1-04": "audio/34.mp3",
+  "lija-5-06": "audio/35.mp3",
+  "lija-5-05": "audio/36.mp3",
+  "lija-5-02": "audio/37.mp3",
+  "lija-2-02": "audio/38.mp3",
+  "lija-8-06": "audio/39.mp3",
+  "lija-3-03": "audio/40.mp3",
+  "lija-3-02": "audio/41.mp3",
+  "lija-3-04": "audio/42.mp3",
+  "lija-3-01": "audio/43.mp3",
+  "lija-2-05": "audio/44.mp3",
+  "auto-lija-nikotin": "audio/45.mp3",
+  "lija-8-02": "audio/46.mp3",
+  "lija-8-19": "audio/47.mp3",
+  "lija-8-14": "audio/48.mp3",
+  "lija-8-05": "audio/49.mp3",
+  "lija-8-12": "audio/50.mp3",
+  "lija-8-03": "audio/51.mp3",
+  "lija-8-16": "audio/52.mp3",
+  "lija-11b-03": "audio/53.mp3",
+  "lija-8-08": "audio/54.mp3",
+  "lija-8-04": "audio/55.mp3",
+  "lija-8-09": "audio/56.mp3",
+  "lija-8-15": "audio/57.mp3",
+  "lija-8-18": "audio/58.mp3",
+  "lija-8-17": "audio/59.mp3",
+  "lija-8-01": "audio/60.mp3",
+  "lija-8-10": "audio/61.mp3",
+  "lija-9b-01": "audio/62.mp3",
+  "lija-9b-03": "audio/63.mp3",
+  "lija-9b-02": "audio/64.mp3",
+  "lija-9b-04": "audio/65.mp3",
+  "lija-11b-04": "audio/66.mp3",
+  "lija-11b-05": "audio/67.mp3",
+  "lija-11b-02": "audio/68.mp3",
+  "auto-lija-princes": "audio/69.mp3",
+  "lija-11b-01": "audio/70.mp3",
+  "lija-2-03": "audio/71.mp3"
+};
+TRACKS.forEach(t=>{ if(AUDIO_FILES[t.id]) t.audio=AUDIO_FILES[t.id]; });
+
+// Неофициальные MP3: подключаем только подтверждённые файлы из unrelease.zip.
+const UNOFFICIAL_AUDIO = {
+  "lija-opposite-09": "audio/unofficial/opposite-09.mp3",
+
+  "lija-opposite-08": "audio/unofficial/opposite-08.mp3",
+
+  "lija-opposite-07": "audio/unofficial/opposite-07.mp3",
+
+  "lija-opposite-06": "audio/unofficial/opposite-06.mp3",
+
+  "lija-opposite-05": "audio/unofficial/opposite-05.mp3",
+
+  "lija-opposite-04": "audio/unofficial/opposite-04.mp3",
+
+  "lija-opposite-03": "audio/unofficial/opposite-03.mp3",
+
+  "lija-opposite-02": "audio/unofficial/opposite-02.mp3",
+
+  "lija-opposite-10": "audio/unofficial/opposite-10.mp3",
+
+  "lija-opposite-01": "audio/unofficial/opposite-01.mp3",
+
+  "lija-frgp-01": "audio/unofficial/01.mp3",
+  "lija-bm262-01": "audio/unofficial/02.mp3",
+  "lija-4-01": "audio/unofficial/03.mp3",
+  "lija-mixlija1-01": "audio/unofficial/04.mp3",
+  "lija-bm252-01": "audio/unofficial/05.mp3",
+  "lija-bm252-10": "audio/unofficial/06.mp3",
+  "lija-4-10": "audio/unofficial/07.mp3",
+  "lija-bm262-10": "audio/unofficial/08.mp3",
+  "lija-bm262-11": "audio/unofficial/09.mp3",
+  "lija-4-11": "audio/unofficial/10.mp3",
+  "lija-bm252-11": "audio/unofficial/11.mp3",
+  "lija-bm262-12": "audio/unofficial/12.mp3",
+  "lija-bm252-12": "audio/unofficial/13.mp3",
+  "lija-bm262-13": "audio/unofficial/14.mp3",
+  "lija-bm252-13": "audio/unofficial/15.mp3",
+  "lija-bm262-14": "audio/unofficial/16.mp3",
+  "lija-bm252-14": "audio/unofficial/17.mp3",
+  "lija-bm252-15": "audio/unofficial/18.mp3",
+  "lija-4-02": "audio/unofficial/19.mp3",
+  "lija-mixlija1-02": "audio/unofficial/20.mp3",
+  "lija-bm262-02": "audio/unofficial/21.mp3",
+  "lija-frgp-02": "audio/unofficial/22.mp3",
+  "lija-bm252-02": "audio/unofficial/23.mp3",
+  "lija-bm252-03": "audio/unofficial/24.mp3",
+  "lija-mixlija1-03": "audio/unofficial/25.mp3",
+  "lija-frgp-03": "audio/unofficial/26.mp3",
+  "lija-4-03": "audio/unofficial/27.mp3",
+  "lija-bm262-03": "audio/unofficial/28.mp3",
+  "lija-bm262-04": "audio/unofficial/29.mp3",
+  "lija-bm252-04": "audio/unofficial/30.mp3",
+  "lija-frgp-04": "audio/unofficial/31.mp3",
+  "lija-mixlija1-04": "audio/unofficial/32.mp3",
+  "lija-bm252-05": "audio/unofficial/33.mp3",
+  "lija-mixlija1-05": "audio/unofficial/34.mp3",
+  "lija-frgp-05": "audio/unofficial/35.mp3",
+  "lija-4-05": "audio/unofficial/36.mp3",
+  "lija-bm262-05": "audio/unofficial/37.mp3",
+  "lija-bm262-06": "audio/unofficial/38.mp3",
+  "lija-bm252-06": "audio/unofficial/39.mp3",
+  "lija-mixlija1-06": "audio/unofficial/40.mp3",
+  "lija-4-06": "audio/unofficial/41.mp3",
+  "lija-bm262-07": "audio/unofficial/42.mp3",
+  "lija-frgp-07": "audio/unofficial/43.mp3",
+  "lija-4-07": "audio/unofficial/44.mp3",
+  "lija-bm252-07": "audio/unofficial/45.mp3",
+  "lija-bm262-08": "audio/unofficial/46.mp3",
+  "lija-4-08": "audio/unofficial/47.mp3",
+  "lija-bm252-08": "audio/unofficial/48.mp3",
+  "lija-4-09": "audio/unofficial/49.mp3",
+  "lija-bm252-09": "audio/unofficial/50.mp3",
+  "lija-bm262-09": "audio/unofficial/51.mp3",
+"aki-dm-01": "audio/unofficial/aki-dm-01.mp3",
+  "aki-dm-02": "audio/unofficial/aki-dm-02.mp3",
+  "aki-dm-03": "audio/unofficial/aki-dm-03.mp3",
+  "aki-myaso-01": "audio/unofficial/aki-myaso.mp3"
+};
+TRACKS.forEach(t=>{if(UNOFFICIAL_AUDIO[t.id]) t.audio=UNOFFICIAL_AUDIO[t.id];});
+// В архиве трек BM26-2 №11 подписан «25», а №12 — «ПАРАНОЯ».
+const unofficialNames = {"lija-bm262-11":"25","lija-bm262-12":"ПАРАНОЯ"};
+TRACKS.forEach(t=>{if(unofficialNames[t.id]) t.title=unofficialNames[t.id];});
+
+// Убираем исключительно отсутствующие НЕОФИЦИАЛЬНЫЕ треки и релизы.
+// Официальный каталог, аудио и обложки не затрагиваются.
+const playableUnofficial = new Set(Object.keys(UNOFFICIAL_AUDIO));
+// Неофициальные релизы, которые показываем и без mp3 (аудио добавим позже).
+const KEEP_NO_AUDIO = new Set(["aki-dm"]);
+const oldUnofficial = new Set(RELEASES.filter(r=>!r.official && !KEEP_NO_AUDIO.has(r.id)).map(r=>r.id));
+const allowedUnofficial = new Set();
+for(const t of TRACKS){
+  if(!oldUnofficial.has(t.release)) continue;
+  if(playableUnofficial.has(t.id) || (t.same && playableUnofficial.has(t.same))) allowedUnofficial.add(t.id);
+}
+for(let i=TRACKS.length-1;i>=0;i--){
+  if(oldUnofficial.has(TRACKS[i].release) && !allowedUnofficial.has(TRACKS[i].id)) TRACKS.splice(i,1);
+}
+for(let i=RELEASES.length-1;i>=0;i--){
+  const r=RELEASES[i];
+  if(!r.official){
+    const count=TRACKS.filter(t=>t.release===r.id).length;
+    if(!count) RELEASES.splice(i,1);
+    else r.count=count;
+  }
+}
+
+
+// Биты Someone
+const BEATS = [
+  {id:"b1", title:"Бит 1", bpm:140, key:"Am", dur:"2:10", audio:"", price:"", note:"Тёмный трэп"},
+  {id:"b2", title:"Бит 2", bpm:92,  key:"F#m", dur:"2:45", audio:"", price:"", note:"Лоуфай"},
+  {id:"b3", title:"Бит 3", bpm:128, key:"Cm", dur:"3:00", audio:"", price:"", note:"Хаус"}
+];
+/* ===================== КОНЕЦ ДАННЫХ ===================== */
+
+/* =====================================================================
+   ДИЗАЙН И ЛОГИКА. Здесь контент менять не нужно.
+   ===================================================================== */
+const SITE_NAME = "ПРОЕКТ";          // название в шапке и во вкладке браузера
+const DEFAULT_ACC = "#b9a8ff";
+
+const $ = s=>document.querySelector(s);
+const app = $("#app");
+const reduce = false; // Анимации явно включены владельцем сайта
+const esc = s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const tById = id=>TRACKS.find(t=>t.id===id);
+const rById = id=>RELEASES.find(r=>r.id===id);
+const bById = id=>BEATS.find(b=>b.id===id);
+const TYPE = {album:"Альбом",ep:"EP",single:"Сингл"};
+const plural=(n,f)=>{const m=n%10,h=n%100;return n+" "+(m===1&&h!==11?f[0]:m>=2&&m<=4&&(h<10||h>=20)?f[1]:f[2])};
+const fmt = d=>!d?"скоро":new Date(d).toLocaleDateString("ru-RU",{day:"numeric",month:"long",year:"numeric"});
+const fmtShort = d=>!d?"скоро":new Date(d).toLocaleDateString("ru-RU",{day:"numeric",month:"short"});
+const grad = (h,s=0)=>`linear-gradient(135deg,hsl(${(h+s)%360} 70% 45%),hsl(${(h+s+60)%360} 70% 22%))`;
+const relHue = r=>ARTISTS[r.artist].hue + (r.title.length*7)%50;
+const hexRgb = h=>{h=h.replace("#","");return [0,2,4].map(i=>parseInt(h.substr(i,2),16)).join(",")};
+const accOf = id=>(ARTISTS[id]&&ARTISTS[id].accent)||DEFAULT_ACC;
+
+function cover(r,{vt=false,named=false}={}){
+  const bg = `${named?"view-transition-name:cover;":""}background:${grad(relHue(r))}`;
+  const img = r.cover?`<img src="${esc(r.cover)}" alt="${esc(r.title)}" loading="lazy" decoding="async" onerror="this.remove()">`:"";
+  return `<div class="cover tilt"${vt?" data-vt":""} style="${bg}">${r.cover?img:esc(r.title)}</div>`;
+}
+const credits = ids=>`<span class="who">${ids.map(a=>`<a href="#/artist/${a}">${esc(ARTISTS[a].name)}</a>`).join(", ")}</span>`;
+function prod(r){
+  const id=r.producer||[r.artist,...(r.with||[])].find(id=>id==="someone");
+  return id?` <span class="prod">· prod. <a href="#/artist/${esc(id)}">${esc(ARTISTS[id].name)}</a></span>`:"";
+}
+const relArtists = r=>[r.artist,...(r.with||[])];
+const trackArtists = t=>{const r=rById(t.release);return [...new Set([r.artist,...(r.with||[]),...(t.feat||[])])]};
+const names = ids=>ids.map(a=>ARTISTS[a].name).join(", ");
+const trackAudio = t=>{const b=t.same?tById(t.same):null;return t.audio||(b&&b.audio)||""};
+const toSec = s=>{const m=/^(\d+):(\d+)$/.exec(s||"");return m?+m[1]*60+ +m[2]:0};
+const mmss = s=>{s=Math.max(0,Math.floor(s||0));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+const byDateDesc = (a,b)=>(b.date||"9999").localeCompare(a.date||"9999");
+const ICON_PLAY='<svg class="ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg class="ic-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
+
+// ---------- ссылки на площадки ----------
+const PLATS=[
+  ["spotify","Spotify",q=>"https://open.spotify.com/search/"+q],
+  ["yandex","Яндекс Музыка",q=>"https://music.yandex.ru/search?text="+q],
+  ["vk","VK Музыка",q=>"https://vk.com/audio?q="+q],
+  ["apple","Apple Music",q=>"https://music.apple.com/ru/search?term="+q]
+];
+const LK=()=>Object.assign({artists:{},releases:{},tracks:{}},window.LINKS||{});
+const cleanQ=t=>t.replace(/[\(\[][^\)\]]*[\)\]]/g,"").replace(/\s+/g," ").trim()||t;
+// direct — прямые ссылки из Links.js; query — что искать, если прямой ссылки нет; search — разрешён ли поиск
+function platLinks(direct,query,search){
+  const d=direct||{};
+  const items=PLATS.map(([k,label,fn])=>{
+    if(d[k]) return `<a class="plat" href="${esc(d[k])}" target="_blank" rel="noopener">${label}</a>`;
+    if(search) return `<a class="plat s" href="${esc(fn(encodeURIComponent(query)))}" target="_blank" rel="noopener" title="Поиск: ${esc(query)}">${label}</a>`;
+    return "";
+  }).join("");
+  return items?`<div class="plats"><span class="pl-h">Слушать на</span>${items}</div>`:"";
+}
+const clean=o=>Object.fromEntries(Object.entries(o||{}).filter(([,v])=>v));
+
+// ---------- шапка и подвал ----------
+$("#brand").textContent = SITE_NAME;
+$("#nav").innerHTML = Object.entries(ARTISTS).map(([id,a])=>`<a href="#/artist/${id}" data-nav="${id}">${esc(a.name)}</a>`).join("");
+$("#foot").innerHTML = `<span>${esc(SITE_NAME)}</span>`+Object.entries(ARTISTS).map(([id,a])=>`<a href="#/artist/${id}">${esc(a.name)}</a>`).join("");
+
+function setAccent(hex){
+  const r=document.documentElement.style;
+  r.setProperty("--acc",hex); r.setProperty("--acc-rgb",hexRgb(hex));
+}
+function setAmbient(url){
+  const a=$("#amb");
+  a.style.backgroundImage = url?`url('${url}')`:"";
+  a.classList.toggle("img",!!url);
+}
+
+// ---------- представления ----------
+function releaseCard(r){
+  return `<a class="rel" href="#/release/${r.id}">
+    <span class="when">${fmtShort(r.date)}</span>${cover(r,{vt:true})}
+    <div class="t">${r.highlight?"★ ":""}${esc(r.title)}</div>
+    <div class="d">${esc(names(relArtists(r)))} · ${TYPE[r.type]}</div></a>`;
+}
+function timeline(rels){
+  let out="",last="";
+  rels.forEach(r=>{
+    const y=r.date?r.date.slice(0,4):"скоро";
+    if(y!==last){ out+=`<div class="yr"><span>${y}</span></div>`; last=y; }
+    out+=releaseCard(r);
+  });
+  return out;
+}
+
+// Показываем релизы в день выхода и шесть следующих дней (всего 7).
+// Дата берётся из RELEASES; будущие релизы заранее на главной НЕ показываются.
+// Сравниваем местные календарные даты — без ошибок с часовыми поясами UTC.
+function freshReleases(){
+  const now=new Date();
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+  const day=24*60*60*1000;
+  return RELEASES.filter(r=>{
+    if(!r.official&&r.type==="single") return false;
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(r.date||"")) return false;
+    const [y,m,d]=r.date.split("-").map(Number);
+    const released=new Date(y,m-1,d);
+    if(released.getFullYear()!==y||released.getMonth()!==m-1||released.getDate()!==d) return false;
+    const days=Math.round((today-released.getTime())/day);
+    return days>=0&&days<7;
+  }).sort(byDateDesc);
+}
+function latestReleaseBanner(){
+  const rels=freshReleases();
+  if(!rels.length) return "";
+  return `<section class="new-releases" aria-label="Новые релизы">
+    <div class="new-releases-heading"><span class="new-releases-indicator" aria-hidden="true"></span><h2>Новые релизы</h2></div>
+    <div class="new-releases-grid">${rels.map(r=>{
+      const a=ARTISTS[r.artist];
+      const coverArt=r.cover?`<img src="${esc(r.cover)}" alt="" loading="eager" onerror="this.remove()">`:"";
+      return `<a class="new-release" href="#/release/${esc(r.id)}" style="--new-color:${esc(a.accent)}">
+        <div class="new-release-art">${coverArt}</div>
+        <div class="new-release-inner">
+          <span class="new-release-tag">● Новый релиз</span>
+          <h3 class="new-release-title">${esc(r.title)}</h3>
+          <div class="new-release-info">${esc(names(relArtists(r)))} · ${TYPE[r.type]} · ${fmt(r.date)}</div>
+          <div class="new-release-more">Открыть релиз <span aria-hidden="true">→</span></div>
+        </div></a>`;
+    }).join("")}</div>
+  </section>`;
+}
+
+
+// Автоматическая смена стадий по календарю Стокгольма (без публикации новых файлов).
+// Этап 0 до 27 ноября, этапы 1–3 и финал 25 декабря 2026.
+const RIFT_PHASES = [
+  {date:"2026-11-27",stage:1},
+  {date:"2026-12-11",stage:2},
+  {date:"2026-12-18",stage:3},
+  {date:"2026-12-25",stage:4}
+];
+function riftStage(){
+  // Use date parts explicitly; some browsers localize punctuation differently.
+  const parts=new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Stockholm",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
+  const v=Object.fromEntries(parts.filter(x=>x.type!=="literal").map(x=>[x.type,x.value]));
+  const today=`${v.year}-${v.month}-${v.day}`;
+  return RIFT_PHASES.reduce((stage,p)=>today>=p.date?p.stage:stage,0);
+}
+function syncRiftStage(){
+  const el=document.querySelector(".rift-teaser");
+  if(!el)return;
+  const stage=PORTAL_PREVIEW?4:riftStage();
+  if(el.dataset.riftStage===String(stage))return;
+  el.dataset.riftStage=String(stage);
+  const seal=el.querySelector(".rift-seal");
+  if(seal)seal.textContent=portalUnlocked()?"ВОЙТИ В РАЗЛОМ":"НЕ ОТКРЫВАТЬ";
+  el.querySelector(".rift-release-art").innerHTML=riftCover();
+  el.setAttribute("role",portalUnlocked()?"button":"img");
+  el.setAttribute("aria-label",portalUnlocked()?"Новый релиз. Войти в разлом":"Запечатанная красная аномалия, вход закрыт");
+  el.title=portalUnlocked()?"Нажми, чтобы войти":"Что-то скрывается по ту сторону…";
+  if(portalUnlocked())el.setAttribute("tabindex","0");else el.removeAttribute("tabindex");
+}
+setInterval(syncRiftStage,30000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncRiftStage()});
+
+// Demo exists only in the separate local preview file, never in the production file.
+const PORTAL_PREVIEW = false;
+const PORTAL_ALBUM = { title:"NEW ERA BITCH", artists:["lija","aki","someone"], cover:"images/portal-album-cover.jpg" };
+function portalUnlocked(){return PORTAL_PREVIEW || riftStage()>=4;}
+function riftCover(){
+  return portalUnlocked()&&PORTAL_ALBUM.cover
+    ? `<img src="${esc(PORTAL_ALBUM.cover)}" alt="" onerror="this.remove()">`
+    : "";
+}
+function portalPage(){
+  if(!portalUnlocked())return home();
+  return {title:"Начинается новая эра",parent:"#/",accent:"#ed304f",amb:null,
+    html:`<section class="portal-realm"><div class="portal-space">
+      <div class="portal-kicker">25.12.2026 // ДРУГАЯ СТОРОНА</div>
+      <h1 class="portal-title">Начинается <span>новая эра</span></h1>
+      <p class="portal-lead">С этого альбома начинается наша новая музыкальная эра.</p>
+      <div class="portal-card"><img class="portal-art" src="${esc(PORTAL_ALBUM.cover)}" alt="Обложка альбома ${esc(PORTAL_ALBUM.title)}" width="1280" height="1280">
+      <div><div class="portal-kicker">Глобальный релиз</div><h2>${esc(PORTAL_ALBUM.title)}</h2>
+      <p>${esc(names(PORTAL_ALBUM.artists))}</p>
+      <a class="portal-back" href="#/">← Вернуться в обычный мир</a>
+      ${PORTAL_PREVIEW?'<p class="portal-note">РЕЖИМ ПРЕДПРОСМОТРА · Этот макет не является выпущенным альбомом</p>':''}</div></div>
+    </div></section>`};
+}
+let portalEntering=false;
+function enterPortal(){
+  if(!portalUnlocked()||portalAnimating)return;
+  location.hash="#/portal";
+}
+// Event delegation continues working after the home page is re-rendered.
+document.addEventListener("click",e=>{
+  const rift=e.target.closest?.(".rift-teaser");if(!rift)return;
+  if(!portalUnlocked())return;
+  e.preventDefault();enterPortal();
+});
+document.addEventListener("keydown",e=>{
+  if((e.key==="Enter"||e.key===" ")&&e.target.matches?.(".rift-teaser")&&portalUnlocked()){
+    e.preventDefault();enterPortal();
+  }
+});
+
+
+// Portal transition runs from hashchange, so Back and browser navigation animate too.
+
+// Portal foley: non-musical air pressure, stone cracks, grit and a restrained sub impact.
+// Generated locally: no sound files needed. Browsers require a user gesture before sound.
+const portalSound=(()=>{
+  let ctx, master, noiseBuffer, lastHover=0;
+  function init(){
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC)return null;
+    if(!ctx){
+      ctx=new AC();
+      master=ctx.createGain();master.gain.value=.23;
+      const limiter=ctx.createDynamicsCompressor();
+      limiter.threshold.value=-19;limiter.knee.value=8;limiter.ratio.value=8;
+      limiter.attack.value=.002;limiter.release.value=.17;
+      master.connect(limiter);limiter.connect(ctx.destination);
+      const buffer=ctx.createBuffer(1,Math.ceil(ctx.sampleRate*2.5),ctx.sampleRate);
+      const a=buffer.getChannelData(0);
+      for(let i=0;i<a.length;i++)a[i]=Math.random()*2-1;
+      noiseBuffer=buffer;
+    }
+    return ctx;
+  }
+  function unlock(){try{const c=init();if(c?.state==='suspended')c.resume().catch(()=>{});}catch(e){}}
+  // A short gritty impact: pitched, filtered broadband noise rather than bell notes.
+  function grit(at,duration=.11,frequency=1000,loudness=.28){
+    const c=init();if(c?.state!=='running')return;
+    const src=c.createBufferSource(),hp=c.createBiquadFilter(),lp=c.createBiquadFilter(),g=c.createGain();
+    src.buffer=noiseBuffer;
+    hp.type='highpass';hp.frequency.value=Math.max(70,frequency*.35);
+    lp.type='lowpass';lp.frequency.setValueAtTime(frequency*1.7,at);
+    lp.frequency.exponentialRampToValueAtTime(Math.max(180,frequency*.55),at+duration);
+    g.gain.setValueAtTime(.0001,at);
+    g.gain.linearRampToValueAtTime(loudness,at+.005);
+    g.gain.exponentialRampToValueAtTime(.0001,at+duration);
+    src.connect(hp);hp.connect(lp);lp.connect(g);g.connect(master);
+    src.start(at,Math.random());src.stop(at+duration+.01);
+  }
+  function wind(at,duration,startHz,endHz,loudness){
+    const c=init();if(c?.state!=='running')return;
+    const src=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();
+    src.buffer=noiseBuffer;src.loop=true;
+    f.type='lowpass';f.Q.value=.45;
+    f.frequency.setValueAtTime(startHz,at);
+    f.frequency.exponentialRampToValueAtTime(endHz,at+duration);
+    g.gain.setValueAtTime(.0001,at);
+    g.gain.linearRampToValueAtTime(loudness,at+duration*.43);
+    g.gain.exponentialRampToValueAtTime(.0001,at+duration);
+    src.connect(f);f.connect(g);g.connect(master);
+    src.start(at);src.stop(at+duration+.02);
+  }
+  function impact(at,loudness=.29){
+    const c=init();if(c?.state!=='running')return;
+    // Very short low-frequency pressure thump; not a sustained musical note.
+    const o=c.createOscillator(),g=c.createGain();
+    o.type='sine';o.frequency.setValueAtTime(64,at);
+    o.frequency.exponentialRampToValueAtTime(32,at+.2);
+    g.gain.setValueAtTime(.0001,at);
+    g.gain.linearRampToValueAtTime(loudness,at+.008);
+    g.gain.exponentialRampToValueAtTime(.0001,at+.27);
+    o.connect(g);g.connect(master);o.start(at);o.stop(at+.29);
+    grit(at,.17,370,.34);
+  }
+  function hover(){
+    const now=performance.now();if(now-lastHover<1400)return;lastHover=now;
+    try{
+      const c=init();if(c?.state!=='running')return;
+      const t=c.currentTime+.015;
+      grit(t,.09,1150,.13);
+      grit(t+.07,.13,520,.11);
+      wind(t,.36,260,950,.06);
+    }catch(e){}
+  }
+  function transition(direction){
+    try{
+      unlock();const c=init();if(c?.state!=='running')return;
+      const t=c.currentTime+.025;
+      if(direction==='enter'){
+        wind(t,1.12,190,2200,.28);
+        for(let i=0;i<11;i++)grit(t+.16+i*.057,.05+(i%3)*.023,550+(i%4)*530,.10+i*.015);
+        impact(t+.77,.34);
+        wind(t+.79,.62,2500,150,.28);
+        grit(t+.82,.23,2300,.23);
+      }else{
+        wind(t,.83,1800,230,.24);
+        grit(t+.20,.18,1000,.24);
+        grit(t+.31,.10,480,.17);
+        impact(t+.51,.16);
+        wind(t+.54,.56,700,120,.12);
+      }
+    }catch(e){}
+  }
+  return {unlock,hover,transition};
+})();
+document.addEventListener('pointerdown',portalSound.unlock,{passive:true});
+document.addEventListener('keydown',portalSound.unlock);
+document.addEventListener('pointerover',e=>{
+  if(e.pointerType==='touch')return;
+  const r=e.target.closest?.('.rift-teaser');
+  if(r&&(!e.relatedTarget||!r.contains(e.relatedTarget)))portalSound.hover();
+});
+
+let portalAnimating=false;
+let portalNavigationTarget=null;
+function portalCurtain(direction){
+  const el=document.createElement('div');
+  el.className='portal-cinema '+direction;
+  el.setAttribute('aria-hidden','true');
+  el.innerHTML=`<div class="portal-cinema__world"></div>
+  <svg class="portal-cinema__cracks" viewBox="0 0 1200 700" preserveAspectRatio="none">
+  <path d="M600 328 540 288 485 275 427 228 361 216 299 158 220 132 130 57"/>
+  <path d="M600 328 657 287 730 266 788 221 850 219 933 151 1050 104 1184 41"/>
+  <path d="M600 328 542 376 503 437 445 452 405 514 345 552 302 656"/>
+  <path d="M600 328 666 384 704 428 770 447 827 510 896 545 964 651"/>
+  <path d="M600 328 603 240 580 170 594 115 567 19 M600 328 614 420 608 518 636 620 611 699"/>
+  </svg><div class="portal-cinema__flash"></div>
+  ${direction==='enter'?`<div class="portal-cinema__interference">
+    <i style="--band-top:23%;--band-height:8%;--band-delay:.37s"></i>
+    <i style="--band-top:51%;--band-height:4%;--band-delay:.51s"></i>
+    <i style="--band-top:67%;--band-height:11%;--band-delay:.44s"></i>
+    <i style="--band-top:85%;--band-height:2%;--band-delay:.59s"></i>
+  </div>`:''}
+  <div class="portal-cinema__label">${direction==='exit'?'ВОЗВРАЩЕНИЕ':'НАЧИНАЕТСЯ НОВАЯ ЭРА'}</div>`;
+  document.body.appendChild(el);
+  return el;
+}
+function portalNavigateAnimated(nextIsPortal){
+  if(portalAnimating){portalNavigationTarget=nextIsPortal;return;}
+  portalAnimating=true;
+  portalSound.transition(nextIsPortal?'enter':'exit');
+  document.body.classList.remove('portal-suction-enter','portal-suction-exit');
+  void document.body.offsetWidth;
+  document.body.classList.add(nextIsPortal?'portal-suction-enter':'portal-suction-exit');
+  const overlay=portalCurtain(nextIsPortal?'enter':'exit');
+  // Switch the underlying page while the red dimension completely fills the screen.
+  setTimeout(()=>{go();},870);
+  setTimeout(()=>{
+    overlay.remove();document.body.classList.remove('portal-suction-enter','portal-suction-exit');portalAnimating=false;
+    if(portalNavigationTarget!==null){const target=portalNavigationTarget;portalNavigationTarget=null;
+      if(target!==document.body.classList.contains('portal-world'))portalNavigateAnimated(target);
+      else go();}
+  },1700);
+}
+
+function home(){
+  const rels=RELEASES.filter(r=>r.official).sort(byDateDesc);
+  const panels=Object.entries(ARTISTS).map(([id,a],i)=>{
+    const n=RELEASES.filter(r=>r.official&&(r.artist===id||(r.with||[]).includes(id))).length;
+    const photo=a.photo?`url('${esc(a.photo)}')`:grad(a.hue);
+    return `<a class="panel" href="#/artist/${id}" style="--i:${i};--a:${accOf(id)};--a-rgb:${hexRgb(accOf(id))};--photo:${a.photo?photo:"none"}">
+      <div class="panel-in">
+        <span class="role">${esc(a.role)}</span>
+        <span class="name-line"><span class="name">${esc(a.name)}</span></span>
+        ${a.tagline?`<p class="tag">${esc(a.tagline)}</p>`:""}
+        <span class="count"><i></i>${plural(n,["релиз","релиза","релизов"])}</span>
+      </div></a>`}).join("");
+  return {
+    title:"", parent:"#/", accent:DEFAULT_ACC, amb:null, intro:true,
+    html:`<section class="stage"><h1 class="sr">${esc(SITE_NAME)}</h1><div class="rift-teaser" data-rift-stage="${PORTAL_PREVIEW?4:riftStage()}" role="${portalUnlocked()?"button":"img"}" ${portalUnlocked()?'tabindex="0"':''} aria-label="${portalUnlocked()?"Новый релиз. Войти в разлом":"Запечатанная красная аномалия, вход закрыт"}" title="${portalUnlocked()?"Нажми, чтобы войти":"Что-то скрывается по ту сторону…"}">
+          <div class="rift-gradient" aria-hidden="true"></div>
+          <svg class="rift-fractures" viewBox="0 0 1000 260" preserveAspectRatio="none" aria-hidden="true"><path class="rift-fracture crack-stage-1" d="M 555.8 111.8 L 589.6 109.9 L 623.5 116.0 L 657.2 109.3 L 691.0 113.9 L 724.8 114.2 L 758.6 111.2" style="--crack-delay:0.00s"/><path class="rift-fracture crack-stage-1 rift-branch" d="M 657.2 109.3 l -35 -13" style="--crack-delay:0.18s"/><path class="rift-fracture crack-stage-1" d="M 538.6 114.6 L 567.5 118.6 L 596.4 122.5 L 625.6 125.3 L 655.3 125.9 L 685.3 126.0 L 714.7 127.9 L 744.6 128.2" style="--crack-delay:0.11s"/><path class="rift-fracture crack-stage-1" d="M 540.5 119.3 L 560.0 121.1 L 580.1 122.2 L 599.9 123.6 L 615.9 130.3 L 631.1 138.0 L 651.0 139.3" style="--crack-delay:0.22s"/><path class="rift-fracture crack-stage-1" d="M 541.2 121.7 L 566.1 124.6 L 590.2 128.4 L 605.0 142.1 L 631.5 143.4 L 654.7 148.3" style="--crack-delay:0.33s"/><path class="rift-fracture crack-stage-1 rift-branch" d="M 605.0 142.1 l 17 22" style="--crack-delay:0.51s"/><path class="rift-fracture crack-stage-1" d="M 527.6 126.4 L 545.3 134.0 L 552.5 146.5 L 572.4 153.1 L 594.6 158.5 L 607.8 168.2" style="--crack-delay:0.44s"/><path class="rift-fracture crack-stage-1" d="M 522.2 130.1 L 531.4 141.6 L 551.4 149.9 L 567.9 159.3 L 572.7 172.2 L 586.5 182.3" style="--crack-delay:0.55s"/><path class="rift-fracture crack-stage-1" d="M 503.4 131.0 L 507.2 137.5 L 501.0 144.5 L 504.7 151.0 L 507.1 157.6 L 513.1 164.0 L 513.7 170.7 L 511.6 177.4" style="--crack-delay:0.66s"/><path class="rift-fracture crack-stage-1 rift-branch" d="M 504.7 151.0 l 16 -20" style="--crack-delay:0.84s"/><path class="rift-fracture crack-stage-2" d="M 500.7 131.3 L 505.8 143.1 L 497.7 155.0 L 500.4 166.8 L 499.2 178.7 L 503.0 190.5 L 503.2 202.3" style="--crack-delay:0.00s"/><path class="rift-fracture crack-stage-2" d="M 488.0 128.9 L 476.6 144.3 L 471.1 160.7 L 455.8 175.3 L 441.3 190.1 L 433.3 206.1" style="--crack-delay:0.11s"/><path class="rift-fracture crack-stage-2" d="M 474.6 130.0 L 459.4 141.6 L 444.1 153.1 L 431.5 165.5 L 408.7 174.3 L 400.8 188.4 L 382.2 198.7 L 363.3 208.9" style="--crack-delay:0.22s"/><path class="rift-fracture crack-stage-2 rift-branch" d="M 431.5 165.5 l -34 -8" style="--crack-delay:0.40s"/><path class="rift-fracture crack-stage-2" d="M 470.8 122.1 L 448.5 130.1 L 428.8 140.0 L 407.9 149.0 L 374.7 149.3 L 361.4 163.7 L 334.4 168.4 L 312.7 176.9" style="--crack-delay:0.33s"/><path class="rift-fracture crack-stage-2" d="M 454.1 123.8 L 434.8 127.8 L 421.5 137.4 L 394.2 133.7 L 380.6 143.1 L 361.4 147.2 L 345.4 154.3 L 325.0 157.1" style="--crack-delay:0.44s"/><path class="rift-fracture crack-stage-2" d="M 448.8 119.0 L 409.2 127.1 L 367.1 130.9 L 323.6 132.1 L 284.3 140.6 L 243.8 147.2" style="--crack-delay:0.55s"/><path class="rift-fracture crack-stage-2 rift-branch" d="M 323.6 132.1 l -34 7" style="--crack-delay:0.73s"/><path class="rift-fracture crack-stage-2" d="M 457.1 113.8 L 420.2 113.1 L 383.5 112.9 L 348.8 124.4 L 310.7 116.5 L 275.0 122.6 L 238.4 122.9" style="--crack-delay:0.66s"/><path class="rift-fracture crack-stage-3" d="M 455.0 110.2 L 431.4 109.5 L 407.4 111.7 L 384.1 109.6 L 360.9 106.6 L 337.6 104.3 L 313.8 104.7" style="--crack-delay:0.00s"/><path class="rift-fracture crack-stage-3" d="M 459.1 104.9 L 420.0 100.0 L 383.8 91.2 L 342.9 89.1 L 304.5 83.3 L 272.9 67.7 L 232.3 65.2 L 194.1 59.0" style="--crack-delay:0.11s"/><path class="rift-fracture crack-stage-3 rift-branch" d="M 342.9 89.1 l 33 0" style="--crack-delay:0.29s"/><path class="rift-fracture crack-stage-3" d="M 459.7 102.1 L 423.4 94.8 L 388.8 85.7 L 355.0 76.0 L 320.3 67.1 L 284.7 59.0" style="--crack-delay:0.22s"/><path class="rift-fracture crack-stage-3" d="M 471.9 99.1 L 460.5 92.3 L 447.4 86.4 L 434.1 80.7 L 412.8 79.2 L 409.1 68.3 L 394.2 63.4 L 381.4 57.4" style="--crack-delay:0.33s"/><path class="rift-fracture crack-stage-3" d="M 482.3 96.8 L 476.8 87.2 L 470.2 77.8 L 452.6 71.7 L 445.3 62.5 L 432.6 55.0 L 423.5 46.4" style="--crack-delay:0.44s"/><path class="rift-fracture crack-stage-3 rift-branch" d="M 452.6 71.7 l 19 16" style="--crack-delay:0.62s"/><path class="rift-fracture crack-stage-3" d="M 488.0 94.2 L 480.8 74.7 L 471.6 55.6 L 451.2 38.2 L 434.1 20.4 L 425.2 1.2" style="--crack-delay:0.55s"/><path class="rift-fracture crack-stage-3" d="M 503.8 93.6 L 508.1 78.5 L 502.0 62.9 L 519.7 48.5 L 518.0 33.1 L 519.6 17.9" style="--crack-delay:0.66s"/><path class="rift-fracture crack-stage-4" d="M 513.5 91.4 L 523.5 82.2 L 528.5 72.0 L 526.1 60.7 L 535.3 51.3 L 539.5 41.0 L 555.9 32.8 L 558.7 22.3" style="--crack-delay:0.00s"/><path class="rift-fracture crack-stage-4 rift-branch" d="M 526.1 60.7 l 27 2" style="--crack-delay:0.18s"/><path class="rift-fracture crack-stage-4" d="M 524.7 94.6 L 536.4 82.2 L 559.7 74.0 L 571.9 61.8 L 583.7 49.4 L 602.6 39.6" style="--crack-delay:0.11s"/><path class="rift-fracture crack-stage-4" d="M 524.5 99.1 L 556.5 78.1 L 603.8 64.4 L 637.5 44.3 L 669.9 23.6 L 705.1 4.2" style="--crack-delay:0.22s"/><path class="rift-fracture crack-stage-4" d="M 548.2 100.4 L 590.2 93.6 L 624.4 78.8 L 666.8 72.4 L 705.1 61.9 L 745.0 52.9" style="--crack-delay:0.33s"/><path class="rift-fracture crack-stage-4 rift-branch" d="M 666.8 72.4 l -26 0" style="--crack-delay:0.51s"/><path class="rift-fracture crack-stage-4" d="M 535.6 104.3 L 559.1 97.5 L 589.2 98.2 L 606.5 84.2 L 634.6 82.7 L 657.4 75.0 L 684.4 72.2" style="--crack-delay:0.44s"/><path class="rift-fracture crack-stage-4" d="M 539.7 108.3 L 592.6 106.6 L 642.4 96.5 L 692.8 87.9 L 747.9 92.2 L 799.4 86.7 L 850.4 79.8" style="--crack-delay:0.55s"/></svg>
+          <div class="rift-core"><svg class="rift-svg" viewBox="0 0 180 132" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <defs>
+              <radialGradient id="riftAbyss" cx="52%" cy="50%" r="64%"><stop offset="0%" stop-color="#010003"/><stop offset="58%" stop-color="#080005"/><stop offset="82%" stop-color="#33000b"/><stop offset="100%" stop-color="#a40c20"/></radialGradient>
+              <linearGradient id="riftRim" x1="0" y1="0" x2="0.85" y2="1"><stop offset="0%" stop-color="#200007"/><stop offset="37%" stop-color="#b20d23"/><stop offset="62%" stop-color="#51040f"/><stop offset="100%" stop-color="#ff293e"/></linearGradient>
+            </defs>
+            <ellipse class="rift-halo" cx="90" cy="65" rx="74" ry="56"/><ellipse class="rift-energy" cx="90" cy="65" rx="54" ry="43"/>
+            <path class="rift-lip-outer" d="M88 10 100 19 112 12 120 27 138 24 141 38 157 45 150 58 164 70 151 80 150 95 135 98 129 112 111 108 97 122 84 112 67 119 60 106 43 108 39 94 23 88 30 73 18 62 33 52 30 38 48 36 53 22 71 25Z"/>
+            <g class="rift-mouth"><path class="rift-lip" d="M87 19 99 27 110 20 116 33 131 31 135 44 146 49 141 61 151 71 141 79 139 91 126 92 122 104 106 99 95 111 83 103 70 109 64 97 50 100 46 87 34 82 40 71 29 62 43 54 41 43 55 42 61 31 75 34Z"/>
+            <path class="rift-hole" d="M87 28 98 35 107 29 113 43 125 39 127 51 137 55 132 64 140 71 132 78 131 86 119 86 114 96 102 92 94 101 83 94 72 99 67 90 55 92 53 82 43 77 49 69 40 62 53 57 50 49 62 49 67 40 79 42Z"/>
+            </g><path class="rift-undershine" d="M47 77 55 88 67 87 72 94 85 89 M100 96 112 87 122 89 132 78"/>
+            <path class="rift-shards" d="M53 22 45 13 37 12 M121 27 132 16 138 15 M151 50 165 45 M28 86 16 93 M63 108 57 120 M117 107 123 120"/>
+            <g class="rift-particles"><circle cx="36" cy="36" r="1.5"/><circle cx="142" cy="23" r="1.1"/><circle cx="162" cy="78" r="1.3"/><circle cx="32" cy="97" r="1.6"/><circle cx="118" cy="115" r="1"/><circle cx="62" cy="17" r="1.2"/></g>
+            <circle class="rift-ember" cx="45" cy="28" r="1.4"/><circle class="rift-ember" cx="152" cy="34" r="1"/><circle class="rift-ember" cx="24" cy="102" r="1.2"/><circle class="rift-ember" cx="143" cy="105" r="1.5"/>
+          </svg><div class="rift-release-art" aria-hidden="true">${riftCover()}</div></div>
+          <div class="rift-orbits" aria-hidden="true"><i class="orbit-dot" style="--start:0deg;--radius:65px;--speed:1.10s;--delay:-0.00s;--sz:2px"></i><i class="orbit-dot" style="--start:20deg;--radius:74px;--speed:1.38s;--delay:-0.19s;--sz:3px"></i><i class="orbit-dot" style="--start:40deg;--radius:83px;--speed:1.66s;--delay:-0.38s;--sz:4px"></i><i class="orbit-dot" style="--start:60deg;--radius:92px;--speed:1.94s;--delay:-0.57s;--sz:2px"></i><i class="orbit-dot" style="--start:80deg;--radius:65px;--speed:2.22s;--delay:-0.76s;--sz:3px"></i><i class="orbit-dot" style="--start:100deg;--radius:74px;--speed:1.10s;--delay:-0.95s;--sz:4px"></i><i class="orbit-dot" style="--start:120deg;--radius:83px;--speed:1.38s;--delay:-1.14s;--sz:2px"></i><i class="orbit-dot" style="--start:140deg;--radius:92px;--speed:1.66s;--delay:-1.33s;--sz:3px"></i><i class="orbit-dot" style="--start:160deg;--radius:65px;--speed:1.94s;--delay:-1.52s;--sz:4px"></i><i class="orbit-dot" style="--start:180deg;--radius:74px;--speed:2.22s;--delay:-0.00s;--sz:2px"></i><i class="orbit-dot" style="--start:200deg;--radius:83px;--speed:1.10s;--delay:-0.19s;--sz:3px"></i><i class="orbit-dot" style="--start:220deg;--radius:92px;--speed:1.38s;--delay:-0.38s;--sz:4px"></i><i class="orbit-dot" style="--start:240deg;--radius:65px;--speed:1.66s;--delay:-0.57s;--sz:2px"></i><i class="orbit-dot" style="--start:260deg;--radius:74px;--speed:1.94s;--delay:-0.76s;--sz:3px"></i><i class="orbit-dot" style="--start:280deg;--radius:83px;--speed:2.22s;--delay:-0.95s;--sz:4px"></i><i class="orbit-dot" style="--start:300deg;--radius:92px;--speed:1.10s;--delay:-1.14s;--sz:2px"></i><i class="orbit-dot" style="--start:320deg;--radius:65px;--speed:1.38s;--delay:-1.33s;--sz:3px"></i><i class="orbit-dot" style="--start:340deg;--radius:74px;--speed:1.66s;--delay:-1.52s;--sz:4px"></i></div>
+          <div class="rift-spark-field" aria-hidden="true"></div>
+          <div class="rift-caption" aria-hidden="true"><span class="rift-release-label">Новый релиз</span>
+          <span class="rift-seal">${portalUnlocked()?"ВОЙТИ В РАЗЛОМ":"НЕ ОТКРЫВАТЬ"}</span></div>
+        </div><div class="panels">${panels}</div></section>${latestReleaseBanner()}
+      <div class="sec-head"><h2>Дорожка релизов</h2>
+        <div class="ctl"><button id="rPrev" aria-label="Назад по дорожке"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <button id="rNext" aria-label="Вперёд по дорожке"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></button></div></div>
+      <div class="rail" id="rail"><div class="track-line">${timeline(rels)}</div></div>`,
+    after(){
+      const rail=$("#rail"); if(!rail) return;
+      $("#rPrev").onclick=()=>rail.scrollBy({left:-rail.clientWidth*.8,behavior:"smooth"});
+      $("#rNext").onclick=()=>rail.scrollBy({left:rail.clientWidth*.8,behavior:"smooth"});
+    }
+  };
+}
+
+function artistPage(id,tab){
+  const a=ARTISTS[id]; if(!a) return notFound();
+  tab=a.tabs.includes(tab)?tab:"music";
+  const labels={music:a.role==="Продюсер"?"Релизы":"Музыка",unofficial:"Неофициальные треки и альбомы",beats:"Биты"};
+  let body="";
+  if(tab==="beats"){
+    body=`<div class="list">${BEATS.map((b,i)=>`<a class="row" href="#/beat/${b.id}"><span class="n">${i+1}</span>
+      <div><div class="tt">${esc(b.title)}</div><div class="sub">${b.bpm} BPM · ${esc(b.key)} · ${esc(b.note)}</div></div><span class="du">${esc(b.dur)}</span></a>`).join("")}</div>`;
+  } else {
+    const off=tab==="music";
+    const rels=RELEASES.filter(r=>(r.artist===id||(r.with||[]).includes(id))&&r.official===off).sort(byDateDesc);
+    let last="";
+    rels.forEach(r=>{
+      const y=r.date?r.date.slice(0,4):"скоро";
+      if(y!==last){ if(last) body+="</div>"; body+=`<div class="yh"><b>${y}</b><span></span></div><div class="grid">`; last=y; }
+      body+=`<a class="card" href="#/release/${r.id}">${cover(r,{vt:true})}<div class="t">${esc(r.title)}</div><div class="d">${TYPE[r.type]} · ${fmt(r.date)}</div></a>`;
+    });
+    if(last) body+="</div>";
+    const feats=TRACKS.filter(t=>{const r=rById(t.release);return (t.feat||[]).includes(id)&&r.artist!==id&&!(r.with||[]).includes(id)&&r.official===off});
+    if(feats.length) body+=`<div class="yh"><b>Фиты</b><span></span></div><div class="list" style="margin-top:0">${feats.map((t,i)=>{const r=rById(t.release);return `<a class="row" href="#/track/${t.id}"><span class="n">${i+1}</span>
+      <div><div class="tt">${esc(t.title)}</div><div class="sub">${esc(r.title)} · ${fmt(r.date)}</div></div><span class="du">${esc(t.dur)}</span></a>`}).join("")}</div>`;
+    if(!rels.length&&!feats.length) body=`<div class="empty">Здесь пока ничего нет</div>`;
+  }
+  return {
+    title:a.name, parent:"#/", accent:accOf(id), amb:a.photo||null, nav:id,
+    html:`<section class="a-hero"><div>
+        <span class="chip">${esc(a.role)}</span><h1>${esc(a.name)}</h1>
+        ${a.bio?`<p class="bio">${esc(a.bio)}</p>`:""}
+        ${platLinks(clean(LK().artists[id]),a.name,true)}
+      </div>${a.photo?`<div class="a-photo" style="--photo:url('${esc(a.photo)}')"></div>`:""}</section>
+      <div class="tabs">${a.tabs.map(t=>`<a class="tab ${t===tab?"on":""}" href="#/artist/${id}/${t}">${labels[t]}</a>`).join("")}</div>${body}`
+  };
+}
+
+function releasePage(id){
+  const r=rById(id); if(!r) return notFound();
+  const ts=TRACKS.filter(t=>t.release===id).sort((a,b)=>a.n-b.n);
+  const total=ts.reduce((s,t)=>s+toSec(t.dur),0);
+  const hasAudio=ts.some(trackAudio);
+  const meta=[fmt(r.date),plural(r.count||ts.length,["трек","трека","треков"]),total?Math.round(total/60)+" мин":""].filter(Boolean).join(" · ");
+  return {
+    title:r.title, parent:"#/artist/"+r.artist+(r.official?"":"/unofficial"), accent:accOf(r.artist), amb:r.cover||null,
+    html:`<section class="r-hero"><div class="art">${cover(r,{named:true})}</div>
+      <div><span class="chip">${TYPE[r.type]}${r.official?"":" · неофициальный"}</span>
+        <h1>${esc(r.title)}</h1>
+        <p class="credits">${credits(relArtists(r))}${prod(r)}</p>
+        <p class="meta">${meta}</p>
+        <button class="btn" data-playrel="${r.id}" ${hasAudio?"":"disabled"}>${ICON_PLAY}${hasAudio?"Слушать":"Аудио скоро"}</button>
+        ${platLinks(clean(LK().releases[r.id]),names([r.artist])+" "+cleanQ(r.title),r.official)}
+      </div></section>
+      ${ts.length?`<div class="list">${ts.map(t=>`<a class="row" href="#/track/${t.id}" data-tid="${t.id}"><span class="n"><span class="num">${t.n}</span><span class="eq"><i></i><i></i><i></i></span></span>
+        <div><div class="tt">${esc(t.title)}</div></div><span class="du">${esc(t.dur)}</span></a>`).join("")}</div>`
+      :`<div class="empty">Трек-лист скоро появится${r.count?" ("+plural(r.count,["трек","трека","треков"])+")":""}</div>`}`
+  };
+}
+
+function lyricsHtml(text){
+  if(!text||!text.trim()) return `<div class="nolyr">Текста пока нет</div>`;
+  const out=[]; let st=[];
+  const flush=()=>{ if(st.length){ out.push(`<div class="st">${st.join("<br>")}</div>`); st=[]; } };
+  text.replace(/\r/g,"").split("\n").forEach(line=>{
+    const l=line.trim();
+    if(!l){ flush(); return; }
+    if(/^\[.+\]$/.test(l)){ flush(); out.push(`<span class="sec">${esc(l.slice(1,-1))}</span>`); return; }
+    st.push(esc(line));
+  });
+  flush();
+  return `<div class="lyrics">${out.join("")}</div>`;
+}
+
+function trackLinks(t){
+  const K=LK(), b=t.same?tById(t.same):null;
+  return Object.assign({},
+    b?clean(K.releases[b.release]):{}, b?clean(K.tracks[b.id]):{},
+    clean(K.releases[t.release]), clean(K.tracks[t.id]));
+}
+function trackPage(id){
+  const t=tById(id); if(!t) return notFound();
+  const r=rById(t.release);
+  const L=window.LYRICS||{};
+  const base=t.same?tById(t.same):null;
+  const ly=L[t.id]||(base&&L[base.id])||t.lyrics||(base&&base.lyrics)||"";
+  const aud=trackAudio(t);
+  const dur=t.dur||(base&&base.dur)||"";
+  const sg=TRACKS.filter(x=>x.same===t.id).map(x=>`<a href="#/track/${x.id}">${esc(rById(x.release).title)}</a>`);
+  const notes=(base?`<p class="note">Есть в альбоме <a href="#/release/${base.release}">${esc(rById(base.release).title)}</a></p>`:"")
+             +(sg.length?`<p class="note">Выходил отдельным синглом: ${sg.join(", ")}</p>`:"");
+  const single=r.type==="single";
+  return {
+    title:t.title, parent: single?"#/artist/"+r.artist+(r.official?"":"/unofficial"):"#/release/"+r.id, accent:accOf(r.artist), amb:r.cover||null,
+    html:`<section class="t-page"><div class="t-art">${cover(r,{named:true})}</div>
+      <div><span class="chip">${TYPE[r.type]}${r.official?"":" · неофициальный"}</span>
+        <h1>${esc(t.title)}</h1>
+        <p class="credits">${credits(trackArtists(t))}${prod(r)}</p>
+        <p class="meta">${single?"":`Из альбома <a href="#/release/${r.id}">${esc(r.title)}</a> · `}${fmt(r.date)}${dur?" · "+esc(dur):""}</p>
+        ${notes}
+        <button class="btn" data-play="${t.id}" ${aud?"":"disabled"}>${ICON_PLAY}${aud?"Слушать":"Аудио скоро"}</button>
+        ${platLinks(trackLinks(t),names([r.artist])+" "+cleanQ(t.title),r.official)}
+        ${lyricsHtml(ly)}
+      </div></section>`
+  };
+}
+
+function beatPage(id){
+  const b=bById(id); if(!b) return notFound();
+  const fake={artist:"someone",title:b.title};
+  return {
+    title:b.title, parent:"#/artist/someone/beats", accent:accOf("someone"), amb:null,
+    html:`<section class="t-page"><div class="t-art">${cover(fake)}</div><div>
+      <span class="chip">Бит</span><h1>${esc(b.title)}</h1>
+      <p class="credits">${credits(["someone"])}</p>
+      <p class="meta">${b.bpm} BPM · ${esc(b.key)} · ${esc(b.note)} · ${esc(b.dur)}</p>
+      ${b.audio?`<audio controls src="${esc(b.audio)}" style="margin-top:22px;width:100%"></audio>`:`<button class="btn" disabled>${ICON_PLAY}Аудио скоро</button>`}
+      ${b.price?`<p class="note">Цена: ${esc(b.price)}</p>`:""}
+    </div></section>`
+  };
+}
+function notFound(){
+  return {title:"Не найдено",parent:"#/",accent:DEFAULT_ACC,amb:null,
+    html:`<section style="padding-top:80px"><h1 style="font-size:clamp(2rem,6vw,4rem)">Такой страницы нет</h1><p class="mut" style="margin-top:14px">Возможно, ссылка устарела. <a href="#/" style="color:var(--acc)">Вернуться на главную</a></p></section>`};
+}
+
+
+// Заметные анимации блоков при прокрутке; контент остаётся доступным даже без JS.
+let entranceObserver=null;
+function animateView(){
+  if(entranceObserver){ entranceObserver.disconnect(); entranceObserver=null; }
+  if(reduce) return;
+  // Герой анимируется собственным каскадом; остальное — по мере появления.
+  const items=[...app.querySelectorAll('.new-release, .new-releases-heading, .sec-head, .rail .rel, .tabs, .yh, .grid .card, .list .row, .empty, .lyrics .st, .lyrics .sec, .nolyr')];
+  function play(el,index){
+    if(el.classList.contains('fx-in')) return;
+    const offset=el.matches('.rel,.card,.row') ? (index%6)*85 : 0;
+    el.style.setProperty('--fx-delay',offset+'ms');
+    el.classList.add('fx-in');
+  }
+  if(!('IntersectionObserver' in window)) { items.forEach(play); return; }
+  entranceObserver=new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        entranceObserver.unobserve(entry.target);
+        play(entry.target,items.indexOf(entry.target));
+      }
+    });
+  },{rootMargin:'0px 0px -20px 0px',threshold:.04});
+  items.forEach(el=>entranceObserver.observe(el));
+}
+
+// ---------- роутер, переходы, «назад» ----------
+let parentHash="#/", firstPaint=true;
+let stack=[location.hash||"#/"];
+
+function route(){
+  let p=location.hash.replace(/^#\/?/,"").split("/").filter(Boolean);
+  if(p[0]==="release"){
+    const r=rById(p[1]);
+    if(r&&r.type==="single"){
+      const ts=TRACKS.filter(t=>t.release===r.id);
+      if(ts.length===1){ p=["track",ts[0].id]; const h="#/track/"+ts[0].id; history.replaceState(null,"",h); stack[stack.length-1]=h; }
+    }
+  }
+  if(!p.length) return home();
+  if(p[0]==="portal") return portalPage();
+  if(p[0]==="artist") return artistPage(p[1],p[2]);
+  if(p[0]==="release") return releasePage(p[1]);
+  if(p[0]==="track") return trackPage(p[1]);
+  if(p[0]==="beat") return beatPage(p[1]);
+  return notFound();
+}
+function commit(v){
+  const isPortal=location.hash.replace(/^#\/?/,"").split("/")[0]==="portal"&&portalUnlocked();
+  document.body.classList.toggle("portal-world",isPortal);
+  parentHash=v.parent||"#/";
+  setAccent(v.accent||DEFAULT_ACC); setAmbient(v.amb||null);
+  document.title=v.title?`${v.title} — ${SITE_NAME}`:SITE_NAME;
+  app.innerHTML=v.html;
+  app.classList.remove("intro","cinematic");
+  // Force a fresh cinematic intro on every SPA navigation, not just the first page.
+  void app.offsetWidth;
+  app.classList.add("cinematic");
+  $("#back").hidden=(location.hash===""||location.hash==="#/");
+  document.querySelectorAll(".nav a").forEach(a=>a.classList.toggle("on",a.dataset.nav===v.nav));
+  window.scrollTo(0,0);
+  if(v.after) v.after();
+  syncRiftStage();
+  syncUI();
+  animateView();
+}
+function go(){
+  const run=()=>commit(route());
+  if(!firstPaint&&document.startViewTransition&&!reduce&&!portalEntering&&!portalAnimating){
+    const vt=document.startViewTransition(run);
+    vt.ready.catch(()=>{}); vt.finished.catch(()=>{});
+  } else run();
+  firstPaint=false;
+}
+window.addEventListener("hashchange",()=>{
+  const h=location.hash||"#/";
+  if(stack.length>1&&stack[stack.length-2]===h) stack.pop(); else stack.push(h);
+  const destinationPortal=h.replace(/^#\/?/,"").split("/")[0]==="portal"&&portalUnlocked();
+  const currentPortal=document.body.classList.contains("portal-world");
+  if(destinationPortal!==currentPortal){portalNavigateAnimated(destinationPortal);return;}
+  if(!portalAnimating)go();
+});
+$("#back").onclick=()=>{ if(stack.length>1) history.back(); else location.hash=parentHash; };
+
+// клик по обложке: она «перелетает» на следующую страницу
+document.addEventListener("click",e=>{
+  if(drag.moved>5){ e.preventDefault(); e.stopPropagation(); drag.moved=0; return; }
+  const a=e.target.closest&&e.target.closest("a"); if(!a) return;
+  const c=a.querySelector(".cover[data-vt]"); if(c) c.style.viewTransitionName="cover";
+},true);
+
+// ---------- перетаскивание дорожки мышью ----------
+const drag={el:null,sx:0,sl:0,moved:0};
+document.addEventListener("mousedown",e=>{
+  const rail=e.target.closest&&e.target.closest(".rail"); if(!rail||e.button!==0) return;
+  drag.el=rail; drag.sx=e.clientX; drag.sl=rail.scrollLeft; drag.moved=0;
+});
+window.addEventListener("mousemove",e=>{
+  if(!drag.el) return;
+  const dx=e.clientX-drag.sx; drag.moved=Math.max(drag.moved,Math.abs(dx));
+  if(drag.moved>5){ drag.el.classList.add("drag"); drag.el.scrollLeft=drag.sl-dx; }
+});
+window.addEventListener("mouseup",()=>{ if(drag.el){ drag.el.classList.remove("drag"); drag.el=null; setTimeout(()=>{drag.moved=0},0); } });
+
+// ---------- наклон обложек ----------
+if(matchMedia("(hover:hover)").matches&&!reduce){
+  let last=null;
+  const reset=el=>{ if(el){ el.style.setProperty("--rx","0deg"); el.style.setProperty("--ry","0deg"); } };
+  document.addEventListener("pointermove",e=>{
+    const el=e.target.closest&&e.target.closest(".tilt");
+    if(el!==last){ reset(last); last=el; }
+    if(!el) return;
+    const b=el.getBoundingClientRect(), x=(e.clientX-b.left)/b.width, y=(e.clientY-b.top)/b.height;
+    el.style.setProperty("--ry",((x-.5)*14).toFixed(2)+"deg");
+    el.style.setProperty("--rx",((.5-y)*14).toFixed(2)+"deg");
+    el.style.setProperty("--mx",(x*100).toFixed(1)+"%");
+    el.style.setProperty("--my",(y*100).toFixed(1)+"%");
+  });
+}
+
+// ---------- плеер ----------
+const audio=new Audio(); audio.preload="none";
+// Сохраняем громкость между перезагрузками; приватный режим тоже поддерживается.
+const volumeSlider = $("#dVolume"), muteButton = $("#dMute");
+let savedVolume = 0.8;
+try { const stored = localStorage.getItem("music-site-volume"); if(stored !== null && Number.isFinite(Number(stored))) savedVolume=Math.min(1,Math.max(0,Number(stored))); } catch(e) {}
+audio.volume=savedVolume;
+let lastAudibleVolume=savedVolume>0?savedVolume:0.8;
+function updateVolumeUI(){
+  const percent=Math.round(audio.volume*100);
+  volumeSlider.value=String(percent);
+  volumeSlider.style.setProperty("--volume-fill",percent+"%");
+  volumeSlider.title="Громкость: "+percent+"%";
+  const silent=audio.volume===0;
+  muteButton.setAttribute("aria-label",silent?"Включить звук":"Выключить звук");
+  muteButton.querySelector(".vol-waves").style.display=silent?"none":"";
+  muteButton.querySelector(".vol-cross").style.display=silent?"":"none";
+}
+function setVolume(value){
+  const v=Math.min(1,Math.max(0,value));
+  audio.volume=v;
+  if(v>0) lastAudibleVolume=v;
+  try { localStorage.setItem("music-site-volume",String(v)); } catch(e) {}
+  updateVolumeUI();
+}
+volumeSlider.addEventListener("input",()=>setVolume(Number(volumeSlider.value)/100));
+muteButton.addEventListener("click",()=>setVolume(audio.volume>0?0:lastAudibleVolume));
+updateVolumeUI();
+let cur=null, queue=[], qi=-1;
+const dock=$("#dock");
+function showDock(t){
+  const r=rById(t.release);
+  $("#dTitle").textContent=t.title; $("#dTitle").href="#/track/"+t.id;
+  $("#dWho").textContent=names(trackArtists(t));
+  const c=$("#dCover"); c.href="#/track/"+t.id;
+  const art=r.cover?`url('${r.cover}')`:grad(relHue(r));
+  c.style.backgroundImage=art;
+  $("#mobilePlayerOpen").style.backgroundImage=art;
+  dock.classList.add("on"); document.body.classList.add("has-dock");
+}
+function loadTrack(t){ cur=t; audio.src=trackAudio(t); audio.play().catch(err=>{ console.warn("Не удалось воспроизвести MP3:", audio.src, err); }); showDock(t); renderMobilePlayer(); syncProgress(); syncUI(); }
+function playTrack(id){
+  const t=tById(id); if(!t||!trackAudio(t)) return;
+  if(cur&&cur.id===id){ audio.paused?audio.play():audio.pause(); return; }
+  queue=TRACKS.filter(x=>x.release===t.release).sort((a,b)=>a.n-b.n).filter(trackAudio);
+  qi=queue.findIndex(x=>x.id===id); loadTrack(t);
+}
+function step(d){ const n=qi+d; if(n>=0&&n<queue.length){ qi=n; loadTrack(queue[n]); } }
+document.addEventListener("click",e=>{
+  const p=e.target.closest&&e.target.closest("[data-play]");
+  if(p){ e.preventDefault(); playTrack(p.dataset.play); return; }
+  const pr=e.target.closest&&e.target.closest("[data-playrel]");
+  if(pr&&!pr.disabled){
+    e.preventDefault();
+    const rid=pr.dataset.playrel;
+    if(cur&&cur.release===rid){ audio.paused?audio.play():audio.pause(); }
+    else { const f=TRACKS.filter(x=>x.release===rid).sort((a,b)=>a.n-b.n).find(trackAudio); if(f) playTrack(f.id); }
+  }
+});
+$("#dPlay").onclick=()=>{ if(cur) audio.paused?audio.play():audio.pause(); };
+$("#dPrev").onclick=()=>{ if(audio.currentTime>3) audio.currentTime=0; else step(-1); };
+$("#dNext").onclick=()=>step(1);
+$("#dBar").addEventListener("click",e=>{
+  const b=e.currentTarget.getBoundingClientRect();
+  if(audio.duration) audio.currentTime=audio.duration*Math.min(1,Math.max(0,(e.clientX-b.left)/b.width));
+});
+function syncProgress(){
+  $("#dCur").textContent=mmss(audio.currentTime); $("#dTot").textContent=mmss(audio.duration);
+  const canSeek=Number.isFinite(audio.duration)&&audio.duration>0&&!audio.error;
+  const progress=canSeek?audio.currentTime/audio.duration:0;
+  $("#dFill").style.width=progress*100+"%";
+  $("#mobileCurrent").textContent=$("#dCur").textContent;
+  $("#mobileDuration").textContent=$("#dTot").textContent;
+  mobileSeek.disabled=!canSeek;
+  mobileSeek.value=String(Math.round(progress*1000));
+  mobileSeek.setAttribute("aria-valuetext",$("#dCur").textContent+" / "+$("#dTot").textContent);
+}
+["timeupdate","durationchange","emptied","error"].forEach(event=>audio.addEventListener(event,syncProgress));
+audio.addEventListener("error",()=>{if(cur) console.error("Не удалось загрузить трек:",cur.title,audio.currentSrc);});
+audio.addEventListener("play",syncUI); audio.addEventListener("pause",syncUI);
+audio.addEventListener("ended",()=>{ if(qi<queue.length-1) step(1); else syncUI(); });
+function syncUI(){
+  const playing=!!cur&&!audio.paused;
+  $("#dPlay").classList.toggle("playing",playing);
+  $("#mobilePlay").classList.toggle("playing",playing);
+  $("#mobilePlay").setAttribute("aria-label",playing?"Пауза":"Воспроизвести");
+  document.querySelectorAll("[data-play]").forEach(b=>b.classList.toggle("playing",playing&&cur&&b.dataset.play===cur.id));
+  document.querySelectorAll("[data-playrel]").forEach(b=>b.classList.toggle("playing",playing&&cur&&b.dataset.playrel===cur.release));
+  document.querySelectorAll(".row[data-tid]").forEach(r=>{
+    const on=!!cur&&r.dataset.tid===cur.id; r.classList.toggle("now",on); r.classList.toggle("playing",on&&playing);
+  });
+}
+
+const mobilePlayer=$("#mobilePlayer"), mobileSeek=$("#mobileSeek");
+const mobileViewport=matchMedia("(max-width:700px)");
+$("#mobilePlayerOpen").onclick=()=>{if(cur) mobilePlayer.showModal();};
+mobileViewport.addEventListener("change",event=>{if(!event.matches&&mobilePlayer.open) mobilePlayer.close();});
+$("#mobilePlayerTitle").addEventListener("click",()=>mobilePlayer.close());
+for(const [mobile,desktop] of [["mobilePrev","dPrev"],["mobilePlay","dPlay"],["mobileNext","dNext"]]){
+  const button=$("#"+mobile), original=$("#"+desktop);
+  button.innerHTML=original.innerHTML;
+  button.onclick=()=>original.click();
+}
+mobileSeek.addEventListener("input",()=>{
+  if(!mobileSeek.disabled) audio.currentTime=audio.duration*Number(mobileSeek.value)/1000;
+});
+function renderMobilePlayer(){
+  const title=$("#mobilePlayerTitle");
+  title.textContent=cur.title;
+  title.href="#/track/"+cur.id;
+  $("#mobilePlayerWho").textContent=$("#dWho").textContent;
+  $("#mobilePlayerArt").style.backgroundImage=$("#dCover").style.backgroundImage;
+  $("#mobileNext").disabled=qi>=queue.length-1;
+  $("#mobileQueue").innerHTML=queue.map((track,index)=>
+    `<li><button type="button" data-play="${esc(track.id)}" aria-current="${track.id===cur.id}">${index+1}. ${esc(track.title)}</button></li>`
+  ).join("");
+}
+
+// Поиск использует тот же каталог, который доступен через страницы артистов.
+const catalogDialog=$("#catalogDialog"), catalogInput=$("#catalogInput");
+const normalizeCatalog=s=>s.toLowerCase().replace(/ё/g,"е").replace(/[^\p{L}\p{N}]+/gu," ").trim();
+const catalogGroups=[
+  ["Артисты",Object.entries(ARTISTS).map(([id,artist])=>({path:"artist/"+id,title:artist.name}))],
+  ["Релизы",RELEASES.map(r=>({path:"release/"+r.id,title:r.title,detail:names(relArtists(r))}))],
+  ["Треки",TRACKS.map(t=>({path:"track/"+t.id,title:t.title,detail:names(trackArtists(t))+" · "+rById(t.release).title,play:trackAudio(t)?t.id:""}))]
+];
+for(const [,entries] of catalogGroups){
+  for(const item of entries){
+    item.normalTitle=normalizeCatalog(item.title);
+    item.searchText=normalizeCatalog(item.title+" "+(item.detail||""));
+  }
+}
+function searchCatalog(raw){
+  const query=normalizeCatalog(raw);
+  const words=query.split(" ");
+  const rank=item=>item.normalTitle===query?0:item.normalTitle.startsWith(query)?1:2;
+  return catalogGroups.map(([label,entries])=>[label,query?
+    entries.filter(item=>words.every(word=>item.searchText.includes(word))).sort((a,b)=>rank(a)-rank(b)):[]
+  ]);
+}
+function renderCatalog(){
+  const groups=searchCatalog(catalogInput.value);
+  const count=groups.reduce((total,[,items])=>total+items.length,0);
+  $("#catalogStatus").textContent=count
+    ? "Найдено: "+count
+    : catalogInput.value.trim()?"Ничего не найдено.":"Введите название или имя артиста.";
+  $("#catalogResults").innerHTML=groups.filter(([,items])=>items.length).map(([label,items])=>
+    `<section><h3>${label}</h3>${items.map(item=>`<div class="catalog-result">
+      <a href="#/${esc(item.path)}">${esc(item.title)}${item.detail?`<small>${esc(item.detail)}</small>`:""}</a>
+      ${item.play?`<button type="button" class="d-play" data-play="${esc(item.play)}" aria-label="Играть / пауза: ${esc(item.title)}">${ICON_PLAY}</button>`:""}
+    </div>`).join("")}</section>`
+  ).join("");
+  syncUI();
+}
+$("#catalogOpen").onclick=()=>{catalogDialog.showModal();catalogInput.focus();};
+catalogInput.addEventListener("input",renderCatalog);
+$("#catalogResults").addEventListener("click",event=>{if(event.target.closest("a")) catalogDialog.close();});
+
+// Искры портала: запускаются только пока курсор над дырой; удаляются после анимации.
+// Делегирование работает и при повторном открытии главной страницы SPA.
+(() => {
+  let active=null, emitter=null;
+  const stop=()=>{if(emitter!==null){clearInterval(emitter);emitter=null;} active=null;};
+  const emit=()=>{
+    if(!active || !active.isConnected){stop();return;}
+    const field=active.querySelector('.rift-spark-field');
+    if(!field || field.childElementCount>95)return;
+    for(let i=0;i<2;i++){
+      const spark=document.createElement('i');spark.className='rift-spark';
+      const size=1.5+Math.random()*3.1;spark.style.width=size+'px';spark.style.height=size+'px';
+      field.appendChild(spark);
+      const angle=Math.random()*Math.PI*2, turns=(1.1+Math.random()*1.5)*Math.PI*2*(Math.random()<.5?1:-1);
+      const radius=17+Math.random()*20, end=90+Math.random()*105;
+      const frames=[];
+      for(let k=0;k<=12;k++){
+        const t=k/12,a=angle+turns*t,r=radius+(end-radius)*t;
+        const x=Math.cos(a)*r,y=Math.sin(a)*r*.57;
+        frames.push({transform:`translate(${x.toFixed(1)}px,${y.toFixed(1)}px) scale(${(1.25-t*.85).toFixed(2)})`,opacity:t<.12?t/.12:Math.pow(1-t,1.25)});
+      }
+      const animation=spark.animate(frames,{duration:850+Math.random()*950,easing:'linear',fill:'forwards'});
+      animation.finished.then(()=>spark.remove()).catch(()=>spark.remove());
+    }
+  };
+  document.addEventListener('pointerover',e=>{
+    if(e.pointerType==='touch')return;
+    const portal=e.target.closest?.('.rift-teaser');
+    if(!portal||portal===active)return;
+    stop();active=portal;
+    for(let i=0;i<7;i++)emit();
+    emitter=setInterval(emit,65);
+  });
+  document.addEventListener('pointerout',e=>{
+    if(active && active.contains(e.target) && (!e.relatedTarget || !active.contains(e.relatedTarget)))stop();
+  });
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});
+})();
+
+go();
+</script>
+</body>
+</html>
