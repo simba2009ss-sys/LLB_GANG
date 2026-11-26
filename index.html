@@ -827,8 +827,8 @@ const RELEASES = [
   {id:"lija-nikotin", artist:"lija", with:["aki","someone"], title:"Никотиновая Любовь", type:"single", date:"2026-09-25", cover:"images/nikotinovaya-lyubov.webp", count:1, highlight:false, official:true},
   {id:"lija-princes", artist:"lija", with:["someone"], title:"Принцы ради денег", type:"single", date:"2026-10-16", cover:"images/printsy-radi-deneg.webp", count:1, highlight:false, official:true},
   {id:"aki-vyhod", artist:"aki", with:["someone"], title:"Выход...", type:"single", date:"2026-10-09", cover:"images/vyhod.webp", count:1, highlight:false, official:true},
-  {id:"lija-wings", artist:"lija", with:["someone"], title:"Wings", type:"single", date:"2026-11-27", cover:"images/wings.jpg", count:1, highlight:false, official:true},
-  {id:"lija-llb-gang", artist:"lija", with:["someone"], title:"LLB GANG", type:"single", date:"2026-11-27", cover:"images/llb-gang.jpg", count:1, highlight:false, official:true},
+  {id:"lija-wings", artist:"lija", with:["someone"], title:"Wings", type:"single", date:"2026-11-27", cover:"images/wings.jpg", count:1, highlight:false, official:true, directLinksOnly:true},
+  {id:"lija-llb-gang", artist:"lija", with:["someone"], title:"LLB GANG", type:"single", date:"2026-11-27", cover:"images/llb-gang.jpg", count:1, highlight:false, official:true, directLinksOnly:true},
   {id:"aki-dm", artist:"aki", title:"DIFFERENT MOODS", type:"ep", date:"2026-11-19", cover:"images/aki-different-moods.jpg", count:3, highlight:false, official:false},
   {id:"aki-myaso", artist:"aki", producer:"someone", title:"MЯSO", type:"single", date:"2026-11-22", cover:"images/aki-myaso.jpg", count:1, highlight:false, official:false},
   {id:"lija-bm252", artist:"lija", title:"BM25-2", type:"album", date:"2025-12-11", cover:"images/bm25-2.jpg", count:15, highlight:false, official:false},
@@ -1640,7 +1640,7 @@ function releasePage(id){
         <p class="credits">${credits(relArtists(r))}${prod(r)}</p>
         <p class="meta">${meta}</p>
         <button class="btn" data-playrel="${r.id}" ${hasAudio?"":"disabled"}>${ICON_PLAY}${hasAudio?"Слушать":"Аудио скоро"}</button>
-        ${platLinks(clean(LK().releases[r.id]),names([r.artist])+" "+cleanQ(r.title),r.official)}
+        ${platLinks(clean(LK().releases[r.id]),names([r.artist])+" "+cleanQ(r.title),r.official&&!r.directLinksOnly)}
       </div></section>
       ${ts.length?`<div class="list">${ts.map(t=>`<a class="row" href="#/track/${t.id}" data-tid="${t.id}"><span class="n"><span class="num">${t.n}</span><span class="eq"><i></i><i></i><i></i></span></span>
         <div><div class="tt">${esc(t.title)}</div></div><span class="du">${esc(t.dur)}</span></a>`).join("")}</div>`
@@ -1689,7 +1689,7 @@ function trackPage(id){
         <p class="meta">${single?"":`Из альбома <a href="#/release/${r.id}">${esc(r.title)}</a> · `}${fmt(r.date)}${dur?" · "+esc(dur):""}</p>
         ${notes}
         <button class="btn" data-play="${t.id}" ${aud?"":"disabled"}>${ICON_PLAY}${aud?"Слушать":"Аудио скоро"}</button>
-        ${platLinks(trackLinks(t),names([r.artist])+" "+cleanQ(t.title),r.official)}
+        ${platLinks(trackLinks(t),names([r.artist])+" "+cleanQ(t.title),r.official&&!r.directLinksOnly)}
         ${lyricsHtml(ly)}
       </div></section>`
   };
