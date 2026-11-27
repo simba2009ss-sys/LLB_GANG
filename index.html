@@ -797,7 +797,7 @@ body.portal-suction-exit #app,body.portal-suction-exit #hdr,body.portal-suction-
 const ARTISTS = {
   lija:   {name:"LIJA", accent:"#9d7bff", photo:"images/artist-lija.jpg",    role:"Артист",     tagline:"", bio:"", hue:280, tabs:["music","unofficial"]},
   aki:    {name:"Aki!", accent:"#35d6c0", photo:"images/artist-aki.webp",    role:"Артист",     tagline:"", bio:"", hue:170, tabs:["music","unofficial"]},
-  someone:{name:"Someone", accent:"#ff8a3d", photo:"images/artist-someone.jpg", role:"Продюсер",   tagline:"", bio:"", hue:30,  tabs:["music","beats"]}
+  someone:{name:"Someone", accent:"#ff8a3d", photo:"images/artist-someone.jpg", role:"Продюсер",   tagline:"", bio:"", hue:30,  tabs:["music"]}
 };
 
 // type: album | ep | single
@@ -1758,7 +1758,7 @@ function route(){
   if(p[0]==="artist") return artistPage(p[1],p[2]);
   if(p[0]==="release") return releasePage(p[1]);
   if(p[0]==="track") return trackPage(p[1]);
-  if(p[0]==="beat") return beatPage(p[1]);
+  if(p[0]==="beat") return ARTISTS.someone.tabs.includes("beats")?beatPage(p[1]):artistPage("someone","music");
   return notFound();
 }
 function commit(v){
